@@ -1,0 +1,6 @@
+{
+  "name": "Tarot no Bolso News",
+  "description": "Portal de notícias e Tarot da comunidade Tarot no Bolso (TNB), vigiado pela Alice, uma carismática cartinha com olhos nativa do próprio repositório.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
