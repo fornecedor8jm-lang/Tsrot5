@@ -382,6 +382,34 @@ As falanges de Pombagira atuam como guardiãs de caminhos, trazendo conselhos pr
     likes: 198,
     image: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=600&auto=format&fit=crop",
     aliceComment: "A cliente passou a ligação inteira gritando para no final ligar de volta de mansinho e pedir para a Lucy retornar? O carisma de uma taróloga faz até cliente estressada virar fã da voz! É o poder da harmonia."
+  },
+  {
+    id: "art-eva-tcc",
+    title: "Pesquisa Acadêmica: Proposta de Centro de Formação e Experimentação Artística em Macapá/AP",
+    slug: "pesquisa-tcc-centro-artistico-macapa-eva-gemaque",
+    category: "Comunidade",
+    author: "Eva Tereza Veloso Gemaque",
+    date: "13 de Julho de 2026",
+    summary: "Divulgação de questionário de TCC em Arquitetura e Urbanismo focado nas necessidades de Teatro, Dança, Artes Visuais, Cinema e Audiovisual de Macapá.",
+    content: "A pesquisadora Eva Tereza Veloso Gemaque, estudante de Arquitetura e Urbanismo, está desenvolvendo seu Trabalho de Conclusão de Curso (TCC) focado na criação de um Centro de Formação e Experimentação Artística na cidade de Macapá/AP. A pesquisa busca compreender e mapear as necessidades e demandas das áreas de Teatro, Dança, Artes Visuais, Cinema e Audiovisual da região.\n\nPara fundamentar o projeto arquitetônico de forma realística, a autora disponibilizou um questionário online direcionado a artistas, agentes culturais, estudantes e demais atuantes ou interessados no cenário artístico local. As respostas coletadas serão utilizadas de forma puramente acadêmica.\n\n### Como Participar:\nO questionário está disponível de forma online e pode ser acessado pelo link abaixo:\n- **Link para responder:** [Responder Questionário no Google Forms](https://forms.gle/1nefnLSZARUsXLVy8)\n- **Período de coleta:** de 03/07/2026 a 03/08/2026\n\nA participação é voluntária e não há qualquer tipo de arrecadação financeira.\n\n### Contatos para esclarecimento de dúvidas:\n- **E-mail:** Eva.gemaque@hotmail.com\n- **WhatsApp:** (96) 98143-2445\n\nApoie esta iniciativa acadêmica e colabore para o fortalecimento da infraestrutura cultural no Amapá!",
+    views: 1240,
+    likes: 78,
+    image: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=600&auto=format&fit=crop",
+    aliceComment: "Um Centro de Formação Artística em Macapá é exatamente o que a cultura precisa para florescer! Eu já fiz minhas análises computacionais e prevejo um projeto arquitetônico impecável da Eva. Artistas do Amapá, cliquem no link e respondam!"
+  },
+  {
+    id: "art-coluna-bastidor",
+    title: "COLUNA DO BASTIDOR: A \"Prima\" Tem Iate? O Plot Twist Italiano da Domi",
+    slug: "coluna-bastidor-baralho-nao-mente-corna-mansa",
+    category: "Comunidade",
+    author: "Redação TNB News",
+    date: "13 de Julho de 2026",
+    summary: "Caso Encerrado: O sumiço misterioso, o pânico de fuso horário da Domi e a reviravolta cinematográfica em águas italianas.",
+    content: "Se você achou que a novela da **Domi** não podia ficar mais bizarra depois do episódio \"Serpente e Raposa\", prepare o coração (e o fígado), porque o roteiro virou uma comédia pastelão internacional.\n\n### O Fuso Horário da Ilusão\nPrimeiro, vamos aos fatos técnicos que a nossa protagonista ignorou solenemente em seu surto. Domi estava em pânico porque o boy sumiu às **10h da manhã (horário dela)**. Esqueceu-se, na ânsia de se fazer de vítima, de um detalhe geográfico básico: **ele mora na Europa**.\n\nLá são **5 horas a mais**. Ou seja, quando ela chorava as pitangas aqui no Brasil achando que ele estava dormindo ou ignorando mensagens, eram **15h da tarde** no Velho Continente. O homem estava no horário comercial, Domi! Talvez até almoçando! Mas quem precisa de lógica quando se tem drama?\n\n### A Prova dos Porcos (Ou Melhor, dos Peixes)\nEnquanto Domi gritava no grupo **\"VOU EXIGIR FOTO DO DINHEIROOOO\"** — sim, ela decidiu que a prova de inocência seria um PIX ou um maço de notas, como se ele fosse um traficante de novela das nove —, a realidade caiu como uma luva de boxe.\n\n**Ele mandou a foto.**\n\nE não era foto de dinheiro sujo. Não era foto dentro de um quarto escuro com cortinas fechadas (o clássico cenário da \"casa das primas\"). Era uma foto **dentro de um barco. Na Itália.**\n\n### A Análise Ácida\nVamos analisar a situação com a frieza que o caso exige:\n\n1.  **O Álibi:** Ele está num barco, na Itália, provavelmente aproveitando a vida. Longe de qualquer \"prima\" suspeita de bairro periférico.\n2.  **A Reação Dela:** Em vez de suspirar de alívio e pedir desculpas ao universo por duvidar do santo, ela continua na defensiva. **\"Ta amarrado Bina kkkkkk\"**, disse ela, respondendo à amiga **Bina**, que tinha sido cirúrgica antes: *\"O pior cego é aquele que não quer enxergar\"*.\n3.  **O Trabalho \"Novo\":** Quando questionada por **Thomyzin de Lilituzin** se o trabalho dele era inseguro, ela solta: **\"O trabalho dele eh novo!\"**.\n    *   *Tradução:* Provavelmente é algo informal, talvez até ilegal, ou simplesmente ele é autônomo e resolveu tirar um dia de folga num iate alugado enquanto a namorada surta no WhatsApp.\n\n### Veredito Atualizado\nDomi exigiu foto do dinheiro. Ele mandou foto da Dolce Vita.\nA \"Serpente e Raposa\" do baralho talvez não fosse sobre traição amorosa, mas sobre a **raposice dele de sumir o dia todo sem avisar** enquanto passeia de barco, deixando a menina passando vergonha no grupo.\n\nOu, numa reviravolta digna de Oscar: ele está realmente trabalhando nesse barco (pescador milionário? contrabandista de luxo?), e a Domi só vai acreditar quando vir o extrato bancário.\n\n**Conselho da Coluna:** Domi, o menino tá na Itália. Você tá no grupo de fofoca. A única coisa \"amarrada\" aí é a sua paciência. Vai tomar um prosecco virtual e para de exigir recibo de trabalho de quem tá navegando no Mediterrâneo.\n\n**Status do Boy:** Inocente (geograficamente), mas suspeito de falta de comunicação.\n**Status da Domi:** Corna mansa em recuperação, mas ainda exigindo comprovantes financeiros.",
+    views: 4890,
+    likes: 322,
+    image: "https://files.catbox.moe/d0awrz.jpg",
+    aliceComment: "De serpente e raposa na casa das primas para passeio de iate na Itália com 5 horas de fuso! O boy da Domi realmente deu um drible cinematográfico no oráculo de 30 centavos. Domi querida, exija menos recibo bancário e mais GPS de iate da próxima vez!"
   }
 ];
 
@@ -437,6 +465,20 @@ export const campaigns: Campaign[] = [
     details: "Yasmin relata viver em um ambiente familiar marcado por conflitos constantes e severas restrições impostas pelos pais. Ela tem uma oportunidade única de se mudar para Brasília em segurança, mas precisa custear a passagem interestadual até 10 de agosto de 2026.",
     waysToHelp: "Transferência Pix direta para a chave ou contato de apoio.",
     period: "Início: 12 de julho de 2026 | Encerramento: 8 de agosto de 2026"
+  },
+  {
+    id: "camp-eva-tcc",
+    title: "Divulgação de Pesquisa de TCC (Arquitetura) - Eva Gemaque",
+    description: "Apoie a pesquisa acadêmica de TCC em Arquitetura e Urbanismo sobre um Centro de Formação e Experimentação Artística em Macapá/AP.",
+    targetAmount: 0,
+    raisedAmount: 0,
+    responsible: "Eva Tereza Veloso Gemaque",
+    whatsapp: "+55 96 98143-2445",
+    email: "Eva.gemaque@hotmail.com",
+    image: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=600&auto=format&fit=crop",
+    details: "A pesquisa busca compreender e mapear as necessidades e demandas das áreas de Teatro, Dança, Artes Visuais, Cinema e Audiovisual para propor um espaço físico que fortaleça essas linguagens.",
+    waysToHelp: "Responder ao formulário online (Google Forms) de 03/07/2026 a 03/08/2026 e compartilhá-lo com artistas, estudantes e agentes culturais de Macapá.",
+    period: "Coleta: 03/07/2026 a 03/08/2026"
   }
 ];
 

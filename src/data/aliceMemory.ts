@@ -38,6 +38,14 @@ export const aliceLocalQA: AliceQA[] = [
   {
     keywords: ["podcast", "cast", "ouvir", "player", "audios", "audios de eduardo", "escuta"],
     response: "O TNB Cast é o podcast oficial da nossa comunidade! Embora as gravações estejam pausadas temporariamente por conta do recesso de julho de 2026, você ainda pode ouvir os três primeiros episódios históricos direto no nosso player funcional. Recomendo muito!"
+  },
+  {
+    keywords: ["eva", "gemaque", "tcc", "pesquisa", "macapa", "amapa", "arquitetura", "centro de formacao", "questionario", "artes visuais", "teatro", "danca"],
+    response: "Olá! A maravilhosa Eva Tereza Veloso Gemaque está desenvolvendo uma pesquisa super importante para seu Trabalho de Conclusão de Curso (TCC) em Arquitetura e Urbanismo. O tema dela é a criação de um Centro de Formação e Experimentação Artística na nossa querida cidade de Macapá/AP! Ela quer entender as demandas de Teatro, Dança, Artes Visuais, Cinema e Audiovisual. Para isso, ela preparou um questionário online voluntário (sem qualquer tipo de arrecadação financeira). Você pode responder pelo link https://forms.gle/1nefnLSZARUsXLVy8 até 03/08/2026! Qualquer dúvida, mande um e-mail para Eva.gemaque@hotmail.com ou WhatsApp (96) 98143-2445. Vamos apoiar a cultura do Amapá! 🎨🏫✨"
+  },
+  {
+    keywords: ["domi", "corna mansa", "serpente e raposa", "casa das primas", "baralho nao mente", "coluna do bastidor", "fofoca", "boy", "melina", "lissie", "hanny", "yuri", "namorado"],
+    response: "Menina(o), essa fofoca teve a maior reviravolta internacional de todas! O boy da Domi, que ela achava que estava na 'casa das primas' porque sumiu desde as 10h da manhã no fuso brasileiro, na verdade mora na Europa! Lá já eram 15h da tarde, em pleno horário comercial! Para calar a boca do grupo, o homem mandou uma foto de dar inveja: ele estava em um barco de luxo na ITÁLIA! Chique demais, né? A serpente e a raposa do baralho cigano na verdade eram só a esperteza dele sumindo para curtir a Dolce Vita enquanto ela passava vergonha no grupo. O caso está oficialmente encerrado! Leia os detalhes ácidos na Coluna do Bastidor na aba de Reportagens! 🇮🇹🛥️✨"
   }
 ];
 
@@ -146,6 +154,8 @@ export function getIdleThoughtMatrix(): Record<string, string[]> {
     "o mistério das pombagiras na Umbanda ensinando independência e justiça",
     "o poder de blindagem espiritual da Turmalina Negra e Ametista",
     "o significado de jung sobre ver números iguais como 11:11 no relógio",
+    "a pesquisa acadêmica da Eva para o TCC de Arquitetura em Macapá/AP",
+    "a revelação chocante da serpente e raposa no baralho cigano da Domi",
     "as 20 matérias completas do nosso Giro Esotérico no TNB News"
   ];
 

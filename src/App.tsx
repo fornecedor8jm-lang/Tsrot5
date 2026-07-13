@@ -47,6 +47,16 @@ export default function App() {
     return (saved as "dark" | "light") || "dark";
   });
 
+  // Ativação opcional da Alice
+  const [isAliceActive, setIsAliceActive] = useState<boolean>(() => {
+    const saved = localStorage.getItem("tnb-alice-active");
+    return saved !== null ? saved === "true" : true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("tnb-alice-active", String(isAliceActive));
+  }, [isAliceActive]);
+
   // Filtros de Notícias
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
@@ -56,7 +66,21 @@ export default function App() {
   const [localArticles, setLocalArticles] = useState<Article[]>(() => {
     const saved = localStorage.getItem("tnb-likes-v2");
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) { return articles; }
+      try {
+        const parsed = JSON.parse(saved) as Article[];
+        // Merge with fresh articles data so new content edits always load, but preserving views/likes
+        return articles.map(fresh => {
+          const cached = parsed.find(p => p.id === fresh.id);
+          if (cached) {
+            return {
+              ...fresh,
+              views: Math.max(fresh.views, cached.views),
+              likes: Math.max(fresh.likes, cached.likes)
+            };
+          }
+          return fresh;
+        });
+      } catch (e) { return articles; }
     }
     return articles;
   });
@@ -150,6 +174,48 @@ export default function App() {
   const [timeStr, setTimeStr] = useState("");
   const [countdownStr, setCountdownStr] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [isRecessoFinished, setIsRecessoFinished] = useState(false);
+
+  const recessoStatus = useMemo(() => {
+    if (isRecessoFinished) {
+      return {
+        text: "Comunidade Aberta! 🎉",
+        badgeBg: "bg-emerald-500/15 border-emerald-500/30 text-emerald-400",
+        indicatorBg: "bg-emerald-500",
+        bannerBg: "from-emerald-600 to-emerald-800 border-emerald-400",
+        icon: "✅",
+        textColor: "text-emerald-100"
+      };
+    }
+    const days = countdownStr.days;
+    if (days > 2) {
+      return {
+        text: `Recesso em andamento – Faltam ${days} dias`,
+        badgeBg: "bg-red-500/20 border-red-500/30 text-red-450",
+        indicatorBg: "bg-red-500",
+        bannerBg: "from-red-600 to-red-800 border-red-400",
+        icon: "⏳",
+        textColor: "text-red-100"
+      };
+    } else if (days === 2) {
+      return {
+        text: "Retorno iminente – Faltam 2 dias",
+        badgeBg: "bg-amber-500/20 border-amber-500/30 text-amber-400",
+        indicatorBg: "bg-amber-500",
+        bannerBg: "from-amber-600 to-amber-800 border-amber-400",
+        icon: "⚠️",
+        textColor: "text-amber-100"
+      };
+    } else {
+      return {
+        text: "Quase lá! Retorna amanhã",
+        badgeBg: "bg-emerald-500/20 border-emerald-500/30 text-emerald-400",
+        indicatorBg: "bg-emerald-500",
+        bannerBg: "from-emerald-600 to-emerald-800 border-emerald-400",
+        icon: "🚀",
+        textColor: "text-emerald-100"
+      };
+    }
+  }, [isRecessoFinished, countdownStr.days]);
 
   // Estados para copiar chave Pix
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -365,7 +431,7 @@ export default function App() {
               <Clock size={12} />
               <span>{timeStr}</span>
             </div>
-            <div className="hidden sm:inline">ALICE OFFLINE: OPERANTE</div>
+            <div className="hidden sm:inline">ALICE OFFLINE: {isAliceActive ? "OPERANTE" : "INATIVA"}</div>
             <div>VERSÃO: v89.99</div>
           </div>
         </div>
@@ -388,6 +454,25 @@ export default function App() {
 
           {/* Chaveador de Temas, Player Rápido e Métricas */}
           <div className="flex flex-wrap items-center justify-center gap-4">
+            {/* Botão de Ativação da Alice */}
+            <button
+              onClick={() => setIsAliceActive(prev => !prev)}
+              id="alice-toggle-btn"
+              className={`px-3.5 py-2 rounded-xl border cursor-pointer transition-all hover:scale-105 flex items-center gap-2 font-mono text-xs font-bold shadow-sm ${
+                isAliceActive
+                  ? "bg-amber-500 hover:bg-amber-600 text-slate-950 border-amber-400"
+                  : theme === "dark"
+                    ? "bg-slate-900 hover:bg-slate-850 text-slate-400 border-slate-800"
+                    : "bg-zinc-100 hover:bg-zinc-205 text-zinc-500 border-zinc-300"
+              }`}
+              title={isAliceActive ? "Desativar Assistente Alice" : "Ativar Assistente Alice"}
+            >
+              <div className={`w-2.5 h-2.5 rounded-full ${isAliceActive ? "bg-slate-950 animate-pulse" : "bg-zinc-400 dark:bg-slate-600"}`} />
+              <span className="text-[10px] sm:text-xs">
+                {isAliceActive ? "DESATIVAR ALICE 🤖" : "ATIVAR ALICE 🤖"}
+              </span>
+            </button>
+
             {/* Botão de Tema */}
             <button
               onClick={toggleTheme}
@@ -456,17 +541,23 @@ export default function App() {
 
       {/* BANNER DE RECESSO COM CONTADOR REGRESSIVO EM TEMPO REAL */}
       <section className="bg-gradient-to-r from-amber-600 to-amber-800 text-slate-950 py-4 px-4 font-sans border-b border-amber-400">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-slate-950 text-amber-500 rounded-lg shrink-0">
-              <Calendar size={20} />
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1">
+            <div className="p-2.5 bg-slate-950 text-amber-500 rounded-xl shrink-0">
+              <Calendar size={22} />
             </div>
-            <div>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-950">
-                Comunicado Oficial de Recesso TNB News
-              </h2>
-              <p className="text-xs text-amber-100 font-medium max-w-xl">
-                A comunidade Tarot no Bolso está em período de descanso de uma semana. O site continua ativo para ações solidárias e divulgações. Retorno total em 17 de Julho de 2026.
+            <div className="space-y-1.5 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-slate-950">
+                  Comunicado Oficial de Recesso TNB News
+                </h2>
+                <div id="indicador-recesso" className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider border ${recessoStatus.badgeBg}`}>
+                  <span>{recessoStatus.icon}</span>
+                  <span>{recessoStatus.text}</span>
+                </div>
+              </div>
+              <p className="text-xs text-amber-100 font-medium max-w-2xl leading-relaxed">
+                <strong>ℹ️ Nota de Esclarecimento sobre o Retorno:</strong> A reabertura da comunidade está prevista para o dia <strong>17 de julho</strong>, encerrando o período de recesso. No entanto, o horário exato de retorno pode variar conforme ajustes técnicos finais. Portanto, considere o término do recesso como uma <strong>previsão estimada</strong>, podendo ocorrer ligeiras alterações sem aviso prévio. Agradecemos a compreensão! 🙏
               </p>
             </div>
           </div>
@@ -536,51 +627,59 @@ export default function App() {
                 </div>
               </div>
 
-              {/* SPOTLIGHT: REPORTAGEM DA SEMANA */}
-              <div className="bg-gradient-to-r from-slate-900 to-slate-950 border-2 border-amber-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col md:flex-row gap-6 items-center">
-                <div className="w-full md:w-1/3 h-52 rounded-2xl overflow-hidden border border-slate-800 shrink-0">
-                  <img
-                    src="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=600&auto=format&fit=crop"
-                    alt="Atendimento Místico"
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-                <div className="flex-1 space-y-4">
-                  <div className="flex flex-wrap gap-2 items-center">
-                    <span className="bg-amber-500 text-slate-950 font-mono text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest">
-                      REPORTAGEM DA SEMANA 🏆
-                    </span>
-                    <span className="text-slate-500 font-mono text-[10px]">Publicado em 2026</span>
+               {/* SPOTLIGHT: REPORTAGEM DA SEMANA */}
+              {(() => {
+                const bastidorArt = localArticles.find(a => a.id === "art-coluna-bastidor");
+                if (!bastidorArt) return null;
+                return (
+                  <div className="bg-gradient-to-r from-slate-900 to-slate-950 border-2 border-emerald-500/50 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col md:flex-row gap-6 items-center">
+                    <div className="w-full md:w-1/3 h-52 rounded-2xl overflow-hidden border border-slate-800 shrink-0 relative">
+                      <img
+                        src={bastidorArt.image}
+                        alt="Coluna do Bastidor - Tarot do Bolso"
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute top-2 left-2">
+                        <span className="bg-emerald-600 text-white font-mono text-[9px] font-black px-2 py-1 rounded border border-emerald-400 uppercase tracking-widest flex items-center gap-1 shadow-md">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                          CASO ENCERRADO
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex-1 space-y-4">
+                      <div className="flex flex-wrap gap-2 items-center">
+                        <span className="bg-emerald-600 text-white font-mono text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest shadow-md">
+                          REPORTAGEM CONCLUÍDA ✅
+                        </span>
+                        <span className="text-emerald-500 font-mono text-[10px] font-bold">
+                          ⚡ Plot Twist Italiano: Inocente!
+                        </span>
+                      </div>
+                      
+                      <h3 className="text-xl sm:text-2xl font-display font-bold text-slate-100 hover:text-amber-400 transition-colors leading-tight cursor-pointer"
+                          onClick={() => setSelectedArticle(bastidorArt)}
+                      >
+                        {bastidorArt.title}
+                      </h3>
+                      
+                      <p className="text-xs text-slate-400 leading-relaxed font-sans line-clamp-3">
+                        {bastidorArt.summary}
+                      </p>
+                      
+                      <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-800/40">
+                        <span className="text-[10px] font-mono text-slate-500">Por: {bastidorArt.author}</span>
+                        <button
+                          onClick={() => setSelectedArticle(bastidorArt)}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1 shadow-md uppercase"
+                        >
+                          Ler Reportagem Completa →
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  
-                  <h3 className="text-xl sm:text-2xl font-display font-bold text-slate-100 hover:text-amber-400 transition-colors leading-tight cursor-pointer"
-                      onClick={() => {
-                        const lucyArt = articles.find(a => a.id === "art-lucy");
-                        if (lucyArt) setSelectedArticle(lucyArt);
-                      }}
-                  >
-                    Atendimento místico termina em xingamentos e cliente pede retorno: "Acho que ela gostou da minha voz!"
-                  </h3>
-                  
-                  <p className="text-xs text-slate-400 leading-relaxed font-sans">
-                    Lucy W., consultora de tarot, viveu uma situação inusitada durante um atendimento telefônico após uma cliente chegar à sua linha já bastante irritada por discussões anteriores com outros atendentes...
-                  </p>
-                  
-                  <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-800/40">
-                    <span className="text-[10px] font-mono text-slate-500">Por: Redação TNB News</span>
-                    <button
-                      onClick={() => {
-                        const lucyArt = articles.find(a => a.id === "art-lucy");
-                        if (lucyArt) setSelectedArticle(lucyArt);
-                      }}
-                      className="bg-amber-500 hover:bg-amber-600 text-slate-950 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1 shadow-md"
-                    >
-                      Ler Reportagem Completa →
-                    </button>
-                  </div>
-                </div>
-              </div>
+                );
+              })()}
               
               {/* CARROSSEL DOS FATOS DA COMUNIDADE (MATÉRIAS 01 A 05) */}
               {true && (
@@ -656,8 +755,8 @@ export default function App() {
               {/* GRID PRINCIPAL: FEED DE NOTÍCIAS + COLUNA LATERAL */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 
-                {/* 1. SEÇÃO DE NOTÍCIAS (9 Colunas se fechado, ou 6 colunas se leitor focado aberto) */}
-                <div className={`space-y-6 ${selectedArticle ? "lg:col-span-6" : "lg:col-span-8"}`}>
+                {/* 1. SEÇÃO DE NOTÍCIAS */}
+                <div className="lg:col-span-8 space-y-6">
                   
                   {true ? (
                     <>
@@ -787,236 +886,92 @@ export default function App() {
                   )}
                 </div>
 
-                {/* 2. LEITOR DETALHADO DO ARTIGO (Ocupa 6 colunas, abre de forma fluida) */}
-                <AnimatePresence>
-                  {selectedArticle && (
-                    <motion.div
-                      initial={{ opacity: 0, x: 25 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      className="lg:col-span-6 space-y-6"
-                    >
-                      <div className="bg-slate-900 border-2 border-amber-500/40 rounded-3xl p-6 shadow-2xl sticky top-6 max-h-[85vh] overflow-y-auto">
-                        {/* Header do Leitor */}
-                        <div className="flex justify-between items-start gap-4 mb-4 pb-4 border-b border-slate-800">
-                          <div>
-                            <span className="text-xs font-mono font-bold text-amber-500 uppercase tracking-widest block mb-1">
-                              {selectedArticle.category}
-                            </span>
-                            <h2 className="text-xl sm:text-2xl font-display font-bold text-slate-100 leading-tight">
-                              {selectedArticle.title}
-                            </h2>
-                          </div>
-                          <button
-                            onClick={() => setSelectedArticle(null)}
-                            className="bg-slate-950 text-slate-400 hover:text-slate-100 border border-slate-800 hover:border-slate-700 px-3 py-1.5 rounded-lg text-xs font-mono transition-colors cursor-pointer shrink-0"
-                          >
-                            FECHAR
-                          </button>
-                        </div>
-
-                        {/* Imagem do Leitor */}
-                        <div className="h-48 rounded-xl overflow-hidden mb-4 border border-slate-800">
-                          <img 
-                            src={selectedArticle.image} 
-                            alt={selectedArticle.title}
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
-                        </div>
-
-                        {/* Metadados */}
-                        <div className="flex flex-wrap gap-y-2 justify-between items-center text-xs font-mono text-slate-400 mb-6 bg-slate-950/60 p-3 rounded-xl border border-slate-800/50">
-                          <span>Autor: <strong className="text-slate-300">{selectedArticle.author}</strong></span>
-                          <span>Data: {selectedArticle.date}</span>
-                          <div className="flex gap-3">
-                            <span className="flex items-center gap-1"><Eye size={12} /> {selectedArticle.views}</span>
-                            <button 
-                              onClick={(e) => handleLikeArticle(selectedArticle.id, e)}
-                              className="flex items-center gap-1 hover:text-amber-400 transition-colors cursor-pointer text-amber-500 font-bold"
-                            >
-                              <ThumbsUp size={12} /> {selectedArticle.likes}
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Corpo do Artigo */}
-                        <div className="text-slate-300 text-sm leading-relaxed space-y-4 font-sans max-h-56 overflow-y-auto pr-2">
-                          {selectedArticle.content.split("\n\n").map((para, idx) => (
-                            <p key={idx}>{para}</p>
-                          ))}
-                        </div>
-
-                        {/* Comentário Exclusivo de Alice */}
-                        <div className="mt-6 bg-amber-500/10 border-2 border-amber-500/30 rounded-2xl p-4 relative">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-5 h-4 bg-amber-500 rounded-sm flex gap-[2px] items-center justify-center border border-amber-300 shrink-0">
-                              <span className="w-1 h-1 bg-slate-950 rounded-full"></span>
-                              <span className="w-1 h-1 bg-slate-950 rounded-full"></span>
-                            </div>
-                            <span className="text-xs font-mono font-bold text-amber-400 tracking-wider uppercase">
-                              Comentário da Alice:
-                            </span>
-                          </div>
-                          <p className="text-xs text-amber-200/90 leading-relaxed italic">
-                            "{selectedArticle.aliceComment}"
-                          </p>
-                        </div>
-
-                        {/* ÁREA DE COMENTÁRIOS PERSISTENTES (LOCALSTORAGE) */}
-                        <div className="mt-8 pt-6 border-t border-slate-800 space-y-4">
-                          <div className="flex items-center gap-2 text-slate-200 font-display font-bold text-sm">
-                            <MessageSquare size={16} className="text-amber-500" />
-                            <span>Discussões do Artigo ({commentsList[selectedArticle.id]?.length || 0})</span>
-                          </div>
-
-                          {/* Lista de Comentários */}
-                          <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
-                            {commentsList[selectedArticle.id] && commentsList[selectedArticle.id].length > 0 ? (
-                              commentsList[selectedArticle.id].map((comm, i) => (
-                                <div key={i} className="bg-slate-950/60 border border-slate-800/80 p-3 rounded-xl space-y-1">
-                                  <div className="flex justify-between items-center text-[10px] font-mono">
-                                    <span className="text-amber-500 font-bold flex items-center gap-1">
-                                      <User size={10} /> {comm.author}
-                                    </span>
-                                    <span className="text-slate-500">{comm.date}</span>
-                                  </div>
-                                  <p className="text-xs text-slate-300 font-sans leading-relaxed">
-                                    {comm.text}
-                                  </p>
-                                </div>
-                              ))
-                            ) : (
-                              <p className="text-xs text-slate-500 italic text-center py-2">
-                                Nenhum comentário ainda. Seja o primeiro a palpitar sobre este mistério!
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Form de Envio */}
-                          <form onSubmit={(e) => handleAddComment(selectedArticle.id, e)} className="space-y-2 pt-2">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              <input
-                                type="text"
-                                value={commentName}
-                                onChange={(e) => setCommentName(e.target.value)}
-                                placeholder="Seu nome..."
-                                required
-                                className="bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500 font-mono"
-                              />
-                            </div>
-                            <div className="flex gap-2">
-                              <input
-                                type="text"
-                                value={commentText}
-                                onChange={(e) => setCommentText(e.target.value)}
-                                placeholder="O que você acha sobre isso?..."
-                                required
-                                className="flex-1 bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500"
-                              />
-                              <button
-                                type="submit"
-                                className="bg-amber-500 hover:bg-amber-600 text-slate-950 px-3 py-2 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1"
-                              >
-                                <Send size={12} />
-                              </button>
-                            </div>
-                          </form>
-                        </div>
-
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* 3. COLUNA LATERAL DE RECURSOS (Sempre visível se o leitor estiver fechado) */}
-                {!selectedArticle && (
-                  <div className="lg:col-span-4 space-y-6">
-                    
-                    {/* PLAYER DE PODCAST DE ÁUDIO INTEGRADO (TNB CAST) - Suspenso temporariamente */}
-                    <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl p-5 shadow-lg space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Radio className="text-slate-500" size={18} />
-                          <h4 className="text-xs font-mono font-bold tracking-wider text-slate-400">
-                            OUVIR: TNB CAST DIGITAL
-                          </h4>
-                        </div>
-                        <span className="text-[9px] bg-slate-950 text-slate-500 px-2 py-0.5 rounded border border-slate-800 uppercase tracking-widest font-mono font-bold">
-                          Breve
-                        </span>
-                      </div>
-
-                      <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800/80 text-center space-y-3">
-                        <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-500">
-                          <Radio size={20} />
-                        </div>
-                        <div className="space-y-1">
-                          <h5 className="text-xs font-display font-bold text-slate-300">
-                            TNB Cast Indisponível
-                          </h5>
-                          <p className="text-[10px] text-slate-500 leading-normal font-sans">
-                            O podcast só estará disponível em futuras atualizações do aplicativo. Fique de olho nos nossos commits e changelogs!
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* CAMPANHAS SOLIDÁRIAS COLETIVAS (TABELA DE APOIOS) */}
-                    <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl p-5 shadow-lg space-y-4">
-                      <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-                        <Heart className="text-red-500 animate-pulse fill-red-500" size={18} />
-                        <h4 className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">
-                          CAMPANHAS ATIVAS ({campaigns.length})
+                {/* 3. COLUNA LATERAL DE RECURSOS (Sempre visível) */}
+                <div className="lg:col-span-4 space-y-6">
+                  
+                  {/* PLAYER DE PODCAST DE ÁUDIO INTEGRADO (TNB CAST) - Suspenso temporariamente */}
+                  <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl p-5 shadow-lg space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Radio className="text-slate-500" size={18} />
+                        <h4 className="text-xs font-mono font-bold tracking-wider text-slate-400">
+                          OUVIR: TNB CAST DIGITAL
                         </h4>
                       </div>
-
-                      <p className="text-[11px] text-slate-400 leading-normal font-sans">
-                        O portal TNB News apoia voluntariamente causas da nossa comunidade. Acompanhe e ajude diretamente os responsáveis:
-                      </p>
-
-                      <div className="space-y-4">
-                        {campaigns.map((camp) => {
-                          const pct = Math.min(100, Math.round((camp.raisedAmount / camp.targetAmount) * 100));
-                          return (
-                            <div key={camp.id} className="bg-slate-950/60 border border-slate-800/80 p-3 rounded-xl space-y-2">
-                              <div className="flex justify-between items-start">
-                                <span className="text-[11px] font-display font-bold text-slate-200 line-clamp-1">
-                                  {camp.title}
-                                </span>
-                                <span className="text-[9px] font-mono font-bold text-amber-500 shrink-0 ml-1">
-                                  {pct}%
-                                </span>
-                              </div>
-                              
-                              {/* Barra de Progresso */}
-                              <div className="w-full h-1.5 bg-slate-850 rounded-full overflow-hidden border border-slate-800">
-                                <div 
-                                  className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full" 
-                                  style={{ width: `${pct}%` }}
-                                />
-                              </div>
-
-                              <div className="flex justify-between text-[9px] font-mono text-slate-500">
-                                <span>Arrecadado: R$ {camp.raisedAmount}</span>
-                                <span>Meta: R$ {camp.targetAmount}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      <button
-                        onClick={() => setCurrentTab("campaigns")}
-                        className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 px-3 rounded-xl text-xs font-mono text-center transition-all cursor-pointer flex items-center justify-center gap-1 shadow-md"
-                      >
-                        ACESSAR ABA CAMPANHAS & APOIAR
-                        <ExternalLink size={12} />
-                      </button>
+                      <span className="text-[9px] bg-slate-950 text-slate-500 px-2 py-0.5 rounded border border-slate-800 uppercase tracking-widest font-mono font-bold">
+                        Breve
+                      </span>
                     </div>
 
+                    <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800/80 text-center space-y-3">
+                      <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center mx-auto text-slate-500">
+                        <Radio size={20} />
+                      </div>
+                      <div className="space-y-1">
+                        <h5 className="text-xs font-display font-bold text-slate-300">
+                          TNB Cast Indisponível
+                        </h5>
+                        <p className="text-[10px] text-slate-500 leading-normal font-sans">
+                          O podcast só estará disponível em futuras atualizações do aplicativo. Fique de olho nos nossos commits e changelogs!
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                )}
+
+                  {/* CAMPANHAS SOLIDÁRIAS COLETIVAS (TABELA DE APOIOS) */}
+                  <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl p-5 shadow-lg space-y-4">
+                    <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
+                      <Heart className="text-red-500 animate-pulse fill-red-500" size={18} />
+                      <h4 className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">
+                        CAMPANHAS ATIVAS ({campaigns.length})
+                      </h4>
+                    </div>
+
+                    <p className="text-[11px] text-slate-400 leading-normal font-sans">
+                      O portal TNB News apoia voluntariamente causas da nossa comunidade. Acompanhe e ajude diretamente os responsáveis:
+                    </p>
+
+                    <div className="space-y-4">
+                      {campaigns.map((camp) => {
+                        const pct = Math.min(100, Math.round((camp.raisedAmount / camp.targetAmount) * 100));
+                        return (
+                          <div key={camp.id} className="bg-slate-950/60 border border-slate-800/80 p-3 rounded-xl space-y-2">
+                            <div className="flex justify-between items-start">
+                              <span className="text-[11px] font-display font-bold text-slate-200 line-clamp-1">
+                                {camp.title}
+                              </span>
+                              <span className="text-[9px] font-mono font-bold text-amber-500 shrink-0 ml-1">
+                                {pct}%
+                              </span>
+                            </div>
+                            
+                            {/* Barra de Progresso */}
+                            <div className="w-full h-1.5 bg-slate-850 rounded-full overflow-hidden border border-slate-800">
+                              <div 
+                                className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full" 
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+
+                            <div className="flex justify-between text-[9px] font-mono text-slate-500">
+                              <span>Arrecadado: R$ {camp.raisedAmount}</span>
+                              <span>Meta: R$ {camp.targetAmount}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentTab("campaigns")}
+                      className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 px-3 rounded-xl text-xs font-mono text-center transition-all cursor-pointer flex items-center justify-center gap-1 shadow-md"
+                    >
+                      ACESSAR ABA CAMPANHAS & APOIAR
+                      <ExternalLink size={12} />
+                    </button>
+                  </div>
+
+                </div>
 
               </div>
             </motion.div>
@@ -1056,16 +1011,18 @@ export default function App() {
               {/* Lista Grid de Campanhas */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
                 {campaigns.map((camp) => {
-                  const pct = Math.min(100, Math.round((camp.raisedAmount / camp.targetAmount) * 100));
-                  const missingAmount = Math.max(0, camp.targetAmount - camp.raisedAmount);
-                  const isMetaAchieved = missingAmount === 0;
+                  const isFinancial = camp.targetAmount > 0;
+                  const pct = isFinancial ? Math.min(100, Math.round((camp.raisedAmount / camp.targetAmount) * 100)) : 100;
+                  const missingAmount = isFinancial ? Math.max(0, camp.targetAmount - camp.raisedAmount) : 0;
+                  const isMetaAchieved = isFinancial ? missingAmount === 0 : true;
 
                   // Comentários da Alice personalizados para cada ID de campanha
                   const aliceComments: Record<string, string> = {
                     "camp-ratinho": "Um ratinho de estimação fofinho que só quer feno e carinho... Se você não apoiar essa fofura, seu baralho de Tarot vai dar 'A Torre' em todas as tiragens amorosas por seis meses! Estou avisando... 🐭❤️",
                     "camp-simon": "Simon é cartomante dedicado. Dívidas de cartão são um carma terrível que suga nossa aura. Vamos ajudar a limpar a fatura dele para as tiragens dele continuarem abençoadas! 🔮💳",
                     "camp-luma": "Ver o show do MGK em SP é o sonho supremo de rockstar. Eu queria poder ir junto no bolso dela, mas sou só uma inteligência de papel de 15kb. Ajude a Luma a pular na pista por nós duas! 🤘🔥",
-                    "camp-yasmin": "Aos 19 anos, mudar de cidade para recomeçar a vida exige coragem digna do arcano do Louco dando seu primeiro passo. Vamos segurar essa rede de proteção para ela iniciar essa nova jornada! 🗺️✨"
+                    "camp-yasmin": "Aos 19 anos, mudar de cidade para recomeçar a vida exige coragem digna do arcano do Louco dando seu primeiro passo. Vamos segurar essa rede de proteção para ela iniciar essa nova jornada! 🗺️✨",
+                    "camp-eva-tcc": "Estudantes e artistas de Macapá, essa pesquisa é fundamental para a criação de um polo de arte na região! É um projeto de TCC lindo da Eva em Arquitetura. Vamos responder o formulário e apoiar! 🎨🏫✨"
                   };
 
                   const waLink = `https://wa.me/${camp.whatsapp.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
@@ -1080,11 +1037,13 @@ export default function App() {
                       {/* Badge de Meta/Status */}
                       <div className="absolute top-4 right-4 z-10">
                         <span className={`text-[9px] font-mono font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border ${
-                          isMetaAchieved 
-                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
-                            : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                          !isFinancial
+                            ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                            : isMetaAchieved 
+                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
+                              : "bg-amber-500/10 text-amber-500 border-amber-500/20"
                         }`}>
-                          {isMetaAchieved ? "META BATIDA! 🎉" : "EM ANDAMENTO"}
+                          {!isFinancial ? "PESQUISA ACADÊMICA 🏫" : isMetaAchieved ? "META BATIDA! 🎉" : "EM ANDAMENTO"}
                         </span>
                       </div>
 
@@ -1128,55 +1087,78 @@ export default function App() {
                         </div>
 
                         {/* Barra de Progresso e Métricas */}
-                        <div className="space-y-2 pt-2 border-t border-slate-850">
-                          <div className="flex justify-between items-center text-xs font-mono">
-                            <span className="text-slate-400 font-bold">Progresso Geral</span>
-                            <span className="text-amber-500 font-bold">{pct}%</span>
-                          </div>
-
-                          {/* Track da Barra */}
-                          <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-                            <div
-                              className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full"
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-
-                          {/* Valores Financeiros */}
-                          <div className="grid grid-cols-3 gap-2 text-[10px] font-mono text-center pt-1">
-                            <div className="bg-slate-950/40 p-1.5 rounded-lg border border-slate-900">
-                              <div className="text-slate-500">Meta</div>
-                              <div className="font-bold text-slate-200">R$ {camp.targetAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
+                        {isFinancial ? (
+                          <div className="space-y-2 pt-2 border-t border-slate-850">
+                            <div className="flex justify-between items-center text-xs font-mono">
+                              <span className="text-slate-400 font-bold">Progresso Geral</span>
+                              <span className="text-amber-500 font-bold">{pct}%</span>
                             </div>
-                            <div className="bg-slate-950/40 p-1.5 rounded-lg border border-slate-900">
-                              <div className="text-slate-500">Arrecadado</div>
-                              <div className="font-bold text-emerald-400">R$ {camp.raisedAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
+
+                            {/* Track da Barra */}
+                            <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                              <div
+                                className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full"
+                                style={{ width: `${pct}%` }}
+                              />
                             </div>
-                            <div className="bg-slate-950/40 p-1.5 rounded-lg border border-slate-900">
-                              <div className="text-slate-500">Falta</div>
-                              <div className="font-bold text-amber-500">
-                                {isMetaAchieved 
-                                  ? "Paga! ✓" 
-                                  : `R$ ${missingAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
-                                }
+
+                            {/* Valores Financeiros */}
+                            <div className="grid grid-cols-3 gap-2 text-[10px] font-mono text-center pt-1">
+                              <div className="bg-slate-950/40 p-1.5 rounded-lg border border-slate-900">
+                                <div className="text-slate-500">Meta</div>
+                                <div className="font-bold text-slate-200">R$ {camp.targetAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
+                              </div>
+                              <div className="bg-slate-950/40 p-1.5 rounded-lg border border-slate-900">
+                                <div className="text-slate-500">Arrecadado</div>
+                                <div className="font-bold text-emerald-400">R$ {camp.raisedAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
+                              </div>
+                              <div className="bg-slate-950/40 p-1.5 rounded-lg border border-slate-900">
+                                <div className="text-slate-500">Falta</div>
+                                <div className="font-bold text-amber-500">
+                                  {isMetaAchieved 
+                                    ? "Paga! ✓" 
+                                    : `R$ ${missingAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+                                  }
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
+                        ) : (
+                          <div className="pt-3 border-t border-slate-850 space-y-2">
+                            <div className="bg-slate-950/60 border border-purple-500/20 p-3.5 rounded-2xl text-[10px] font-mono text-slate-300">
+                              <span className="text-purple-400 font-bold block mb-1">🔍 INICIATIVA CIENTÍFICA & CULTURAL</span>
+                              Este projeto é de cunho voluntário e exclusivamente acadêmico, sem fins lucrativos ou arrecadação Pix. Ajude preenchendo o questionário oficial!
+                            </div>
+                          </div>
+                        )}
 
-                        {/* Contatos / Chaves Pix com Copy Interativo */}
+                        {/* Contatos / Chaves Pix ou Google Forms */}
                         <div className="flex flex-col gap-2 pt-1.5">
-                          {camp.pixKey && (
-                            <button
-                              onClick={() => handleCopyPix(camp.pixKey || "")}
-                              className="w-full bg-slate-950 hover:bg-slate-900 text-slate-200 border border-slate-800 hover:border-slate-700 py-2 px-3 rounded-xl text-[11px] font-mono transition-all flex items-center justify-between cursor-pointer"
+                          {!isFinancial ? (
+                            <a
+                              href="https://forms.gle/1nefnLSZARUsXLVy8"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs font-mono text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-lg uppercase tracking-wider animate-bounce-little"
                             >
-                              <span className="text-slate-500">PIX:</span>
-                              <span className="font-bold select-all">{camp.pixKey}</span>
-                              <span className="text-amber-500 font-bold shrink-0 ml-1.5">
-                                {copiedKey === camp.pixKey ? "COPIADA! ✓" : "COPIAR KEY"}
-                              </span>
-                            </button>
+                              Responder no Google Forms 📝
+                              <ExternalLink size={12} />
+                            </a>
+                          ) : (
+                            <>
+                              {camp.pixKey && (
+                                <button
+                                  onClick={() => handleCopyPix(camp.pixKey || "")}
+                                  className="w-full bg-slate-950 hover:bg-slate-900 text-slate-200 border border-slate-800 hover:border-slate-700 py-2 px-3 rounded-xl text-[11px] font-mono transition-all flex items-center justify-between cursor-pointer"
+                                >
+                                  <span className="text-slate-500">PIX:</span>
+                                  <span className="font-bold select-all">{camp.pixKey}</span>
+                                  <span className="text-amber-500 font-bold shrink-0 ml-1.5">
+                                    {copiedKey === camp.pixKey ? "COPIADA! ✓" : "COPIAR KEY"}
+                                  </span>
+                                </button>
+                              )}
+                            </>
                           )}
 
                           <a
@@ -1682,11 +1664,163 @@ export default function App() {
         </div>
       </footer>
 
+      {/* LEITOR DETALHADO DO ARTIGO EM MODAL (Abre de forma fluida por cima de tudo) */}
+      <AnimatePresence>
+        {selectedArticle && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md overflow-y-auto">
+            {/* Backdrop click closes modal */}
+            <div className="absolute inset-0 cursor-pointer" onClick={() => setSelectedArticle(null)} />
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.3 }}
+              className="bg-slate-900 border-2 border-amber-500/40 rounded-3xl p-5 sm:p-6 shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto relative z-10 flex flex-col space-y-4 text-slate-100"
+            >
+              {/* Header do Leitor */}
+              <div className="flex justify-between items-start gap-4 pb-4 border-b border-slate-800">
+                <div>
+                  <span className="text-xs font-mono font-bold text-amber-500 uppercase tracking-widest block mb-1">
+                    {selectedArticle.category}
+                  </span>
+                  <h2 className="text-lg sm:text-xl font-display font-bold text-slate-100 leading-tight">
+                    {selectedArticle.title}
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setSelectedArticle(null)}
+                  className="bg-slate-950 text-slate-400 hover:text-slate-100 border border-slate-800 hover:border-slate-700 px-3 py-1.5 rounded-lg text-xs font-mono transition-colors cursor-pointer shrink-0"
+                >
+                  FECHAR
+                </button>
+              </div>
+
+              {/* Scrollable Container for the rest of the modal to prevent outer screen scrolling issues on mobile */}
+              <div className="space-y-6 overflow-y-auto pr-1 flex-1">
+                {/* Imagem do Leitor */}
+                <div className="h-44 sm:h-56 rounded-xl overflow-hidden border border-slate-800 shrink-0">
+                  <img 
+                    src={selectedArticle.image} 
+                    alt={selectedArticle.title}
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+
+                {/* Metadados */}
+                <div className="flex flex-wrap gap-y-2 justify-between items-center text-xs font-mono text-slate-400 bg-slate-950/60 p-3 rounded-xl border border-slate-800/50">
+                  <span>Autor: <strong className="text-slate-300">{selectedArticle.author}</strong></span>
+                  <span>Data: {selectedArticle.date}</span>
+                  <div className="flex gap-3">
+                    <span className="flex items-center gap-1"><Eye size={12} /> {selectedArticle.views}</span>
+                    <button 
+                      onClick={(e) => handleLikeArticle(selectedArticle.id, e)}
+                      className="flex items-center gap-1 hover:text-amber-400 transition-colors cursor-pointer text-amber-500 font-bold"
+                    >
+                      <ThumbsUp size={12} /> {selectedArticle.likes}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Corpo do Artigo */}
+                <div className="text-slate-300 text-xs sm:text-sm leading-relaxed space-y-4 font-sans border-b border-slate-800 pb-4">
+                  {selectedArticle.content.split("\n\n").map((para, idx) => (
+                    <p key={idx}>{para}</p>
+                  ))}
+                </div>
+
+                {/* Comentário Exclusivo de Alice */}
+                <div className="bg-amber-500/10 border-2 border-amber-500/30 rounded-2xl p-4 relative">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-5 h-4 bg-amber-500 rounded-sm flex gap-[2px] items-center justify-center border border-amber-300 shrink-0">
+                      <span className="w-1 h-1 bg-slate-950 rounded-full"></span>
+                      <span className="w-1 h-1 bg-slate-950 rounded-full"></span>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-amber-400 tracking-wider uppercase">
+                      Comentário da Alice:
+                    </span>
+                  </div>
+                  <p className="text-xs text-amber-200/90 leading-relaxed italic">
+                    "{selectedArticle.aliceComment}"
+                  </p>
+                </div>
+
+                {/* ÁREA DE COMENTÁRIOS PERSISTENTES (LOCALSTORAGE) */}
+                <div className="pt-2 space-y-4">
+                  <div className="flex items-center gap-2 text-slate-200 font-display font-bold text-sm">
+                    <MessageSquare size={16} className="text-amber-500" />
+                    <span>Discussões do Artigo ({commentsList[selectedArticle.id]?.length || 0})</span>
+                  </div>
+
+                  {/* Lista de Comentários */}
+                  <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
+                    {commentsList[selectedArticle.id] && commentsList[selectedArticle.id].length > 0 ? (
+                      commentsList[selectedArticle.id].map((comm, i) => (
+                        <div key={i} className="bg-slate-950/60 border border-slate-800/80 p-3 rounded-xl space-y-1">
+                          <div className="flex justify-between items-center text-[10px] font-mono">
+                            <span className="text-amber-500 font-bold flex items-center gap-1">
+                              <User size={10} /> {comm.author}
+                            </span>
+                            <span className="text-slate-500">{comm.date}</span>
+                          </div>
+                          <p className="text-xs text-slate-300 font-sans leading-relaxed">
+                            {comm.text}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-xs text-slate-500 italic text-center py-2">
+                        Nenhum comentário ainda. Seja o primeiro a palpitar sobre este mistério!
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Form de Envio */}
+                  <form onSubmit={(e) => handleAddComment(selectedArticle.id, e)} className="space-y-2 pt-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        value={commentName}
+                        onChange={(e) => setCommentName(e.target.value)}
+                        placeholder="Seu nome..."
+                        required
+                        className="bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500 font-mono"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        placeholder="O que você acha sobre isso?..."
+                        required
+                        className="flex-1 bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500"
+                      />
+                      <button
+                        type="submit"
+                        className="bg-amber-500 hover:bg-amber-600 text-slate-950 px-3 py-2 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1"
+                      >
+                        <Send size={12} />
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* COMPONENTE INTERATIVO FLUTUANTE DA ALICE */}
-      <AliceWidget currentTab={currentTab} onTabChange={setCurrentTab} selectedArticle={selectedArticle} isVideoPlaying={isVideoPlaying} />
+      {isAliceActive && (
+        <AliceWidget currentTab={currentTab} onTabChange={setCurrentTab} selectedArticle={selectedArticle} isVideoPlaying={isVideoPlaying} />
+      )}
 
       {/* COMPONENTE INTERATIVO GLOBAL MINI ALICE */}
-      <MiniAlice currentTab={currentTab} isVideoPlaying={isVideoPlaying} />
+      {isAliceActive && (
+        <MiniAlice currentTab={currentTab} isVideoPlaying={isVideoPlaying} />
+      )}
 
     </div>
   );
