@@ -37,10 +37,11 @@ import { articles, campaigns, podcastEpisodes, Article, Campaign, PodcastEpisode
 import { versionHistory } from "./data/versionHistory";
 import { cleanAndMatchAliceResponse } from "./data/aliceMemory";
 import AliceWidget from "./components/AliceWidget";
+import MiniAlice from "./components/MiniAlice";
 
 export default function App() {
   // Controle de Abas e Temas
-  const [currentTab, setCurrentTab] = useState<"news" | "campaigns" | "commits" | "alice-doc">("news");
+  const [currentTab, setCurrentTab] = useState<"news" | "campaigns" | "audiovisual" | "faq">("news");
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     const saved = localStorage.getItem("tnb-theme");
     return (saved as "dark" | "light") || "dark";
@@ -69,6 +70,15 @@ export default function App() {
   const [commentsList, setCommentsList] = useState<Record<string, Array<{ author: string; text: string; date: string }>>>({});
   const [commentName, setCommentName] = useState("");
   const [commentText, setCommentText] = useState("");
+
+  // Estados para Aba Audiovisual
+  const [selectedEpisode, setSelectedEpisode] = useState<number>(1);
+  const [isVideoPlaying, setIsVideoPlaying] = useState<boolean>(false);
+  const [seriesRating, setSeriesRating] = useState<number>(() => {
+    return Number(localStorage.getItem("tnb-series-rating") || "0");
+  });
+  const [seriesFeedback, setSeriesFeedback] = useState<string>("");
+  const [feedbackSuccess, setFeedbackSuccess] = useState<boolean>(false);
 
   // Carregar comentários
   useEffect(() => {
@@ -407,7 +417,7 @@ export default function App() {
                 }`}
               >
                 <Newspaper size={14} />
-                TAROT NO BOLSO NEWS
+                📰 Reportagens da Semana
               </button>
               
               <button
@@ -417,27 +427,27 @@ export default function App() {
                 }`}
               >
                 <Heart size={14} />
-                CAMPANHAS DA COMUNIDADE
+                ❤️ Campanhas
               </button>
 
               <button
-                onClick={() => { setCurrentTab("commits"); setSelectedArticle(null); }}
+                onClick={() => { setCurrentTab("audiovisual"); setSelectedArticle(null); }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all duration-150 cursor-pointer ${
-                  currentTab === "commits" ? themeClasses.tabActive : themeClasses.tabInactive
+                  currentTab === "audiovisual" ? themeClasses.tabActive : themeClasses.tabInactive
                 }`}
               >
-                <History size={14} />
-                REQUISITOS & COMMITS (v99.99)
+                <Play size={14} />
+                🎬 Audiovisuais da Semana
               </button>
 
               <button
-                onClick={() => { setCurrentTab("alice-doc"); setSelectedArticle(null); }}
+                onClick={() => { setCurrentTab("faq"); setSelectedArticle(null); }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all duration-150 cursor-pointer ${
-                  currentTab === "alice-doc" ? themeClasses.tabActive : themeClasses.tabInactive
+                  currentTab === "faq" ? themeClasses.tabActive : themeClasses.tabInactive
                 }`}
               >
                 <HelpCircle size={14} />
-                DIRETRIZES DA ALICE
+                ❓ FAQs
               </button>
             </nav>
           </div>
@@ -510,9 +520,70 @@ export default function App() {
               exit={{ opacity: 0, y: -15 }}
               className="space-y-8"
             >
+              {/* NOTÍCIA/AVISO DE RETOMADA DAS REPORTAGENS */}
+              <div className="bg-amber-500/10 border-2 border-amber-500/30 p-5 rounded-3xl space-y-3 shadow-lg">
+                <div className="flex items-center gap-2 text-amber-500 font-mono font-bold text-xs uppercase tracking-wider">
+                  <Newspaper size={16} />
+                  ⚠️ Aviso importante — Retomada das Reportagens
+                </div>
+                <div className="space-y-2 text-xs text-slate-300 leading-relaxed font-sans">
+                  <p>
+                    As Reportagens voltaram a fazer parte do TNB NEWS. Nesta nova fase, as publicações serão disponibilizadas gradualmente. Novas matérias serão adicionadas aos poucos, conforme forem produzidas e revisadas pela redação.
+                  </p>
+                  <p>
+                    Enquanto o acervo é ampliado, o portal destacará uma <strong className="text-amber-400">Reportagem da Semana</strong>, permitindo que os leitores acompanhem os conteúdos mais recentes. Agradecemos a compreensão e o apoio durante essa retomada. 📰
+                  </p>
+                </div>
+              </div>
+
+              {/* SPOTLIGHT: REPORTAGEM DA SEMANA */}
+              <div className="bg-gradient-to-r from-slate-900 to-slate-950 border-2 border-amber-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col md:flex-row gap-6 items-center">
+                <div className="w-full md:w-1/3 h-52 rounded-2xl overflow-hidden border border-slate-800 shrink-0">
+                  <img
+                    src="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=600&auto=format&fit=crop"
+                    alt="Atendimento Místico"
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <div className="flex-1 space-y-4">
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <span className="bg-amber-500 text-slate-950 font-mono text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-widest">
+                      REPORTAGEM DA SEMANA 🏆
+                    </span>
+                    <span className="text-slate-500 font-mono text-[10px]">Publicado em 2026</span>
+                  </div>
+                  
+                  <h3 className="text-xl sm:text-2xl font-display font-bold text-slate-100 hover:text-amber-400 transition-colors leading-tight cursor-pointer"
+                      onClick={() => {
+                        const lucyArt = articles.find(a => a.id === "art-lucy");
+                        if (lucyArt) setSelectedArticle(lucyArt);
+                      }}
+                  >
+                    Atendimento místico termina em xingamentos e cliente pede retorno: "Acho que ela gostou da minha voz!"
+                  </h3>
+                  
+                  <p className="text-xs text-slate-400 leading-relaxed font-sans">
+                    Lucy W., consultora de tarot, viveu uma situação inusitada durante um atendimento telefônico após uma cliente chegar à sua linha já bastante irritada por discussões anteriores com outros atendentes...
+                  </p>
+                  
+                  <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-800/40">
+                    <span className="text-[10px] font-mono text-slate-500">Por: Redação TNB News</span>
+                    <button
+                      onClick={() => {
+                        const lucyArt = articles.find(a => a.id === "art-lucy");
+                        if (lucyArt) setSelectedArticle(lucyArt);
+                      }}
+                      className="bg-amber-500 hover:bg-amber-600 text-slate-950 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1 shadow-md"
+                    >
+                      Ler Reportagem Completa →
+                    </button>
+                  </div>
+                </div>
+              </div>
               
-              {/* CARROSSEL DOS FATOS DA COMUNIDADE (MATÉRIAS 01 A 05) - Exibido apenas se o recesso acabou */}
-              {isRecessoFinished && (
+              {/* CARROSSEL DOS FATOS DA COMUNIDADE (MATÉRIAS 01 A 05) */}
+              {true && (
                 <div className="bg-slate-900 border border-amber-500/20 rounded-3xl overflow-hidden relative shadow-2xl">
                   <div className="absolute top-4 left-4 z-10">
                     <span className="bg-amber-500 text-slate-950 font-mono text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
@@ -588,7 +659,7 @@ export default function App() {
                 {/* 1. SEÇÃO DE NOTÍCIAS (9 Colunas se fechado, ou 6 colunas se leitor focado aberto) */}
                 <div className={`space-y-6 ${selectedArticle ? "lg:col-span-6" : "lg:col-span-8"}`}>
                   
-                  {isRecessoFinished ? (
+                  {true ? (
                     <>
                       {/* Filtro e Pesquisa do Giro Esotérico */}
                       <div className={`p-4 border rounded-2xl ${themeClasses.card} transition-colors`}>
@@ -1140,200 +1211,459 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* TAB 3: REQUISITOS & HISTÓRICO DE MUDANÇAS (v33.33) */}
-          {currentTab === "commits" && (
+          {/* TAB 3: AUDIOVISUAL DA SEMANA */}
+          {currentTab === "audiovisual" && (
             <motion.div
-              key="commits-tab"
+              key="audiovisual-tab"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              className="space-y-6"
+              className="space-y-8 max-w-5xl mx-auto font-sans"
             >
-              <div className="text-center max-w-xl mx-auto mb-8">
-                <History className="mx-auto text-amber-500 mb-3" size={32} />
-                <h2 className="text-2xl font-display font-bold text-slate-100">Controle de Versão por Magnitude</h2>
-                <p className="text-sm text-slate-400 font-sans">
-                  Cada salto de versão representa o volume total de itens entregues e o impacto de transformação na vida do usuário final.
+              {/* Cabeçalho */}
+              <div className="text-center space-y-3">
+                <div className="inline-block p-3 bg-amber-500/10 rounded-2xl text-amber-500">
+                  <Play className="w-8 h-8 animate-pulse" />
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-slate-100 uppercase tracking-tight">
+                  🎬 Audiovisuais da Semana
+                </h2>
+                <p className="text-xs font-mono text-amber-500 uppercase tracking-widest">
+                  Conteúdos Audiovisuais Publicados Regularmente no Portal
                 </p>
               </div>
 
-              {/* Linha de Tempo Vertical */}
-              <div className="relative border-l-2 border-slate-800 pl-6 sm:pl-8 space-y-8 max-w-3xl mx-auto py-4">
-                {versionHistory.map((ver) => (
-                  <div key={ver.version} className="relative">
-                    {/* Marcador de Commit */}
-                    <div className={`absolute -left-[35px] sm:-left-[43px] top-1.5 w-6 h-6 rounded-full border-4 border-slate-950 flex items-center justify-center ${
-                      ver.type === "MASSIVE" ? "bg-amber-500 text-slate-950" : "bg-slate-800 text-slate-400"
-                    }`}>
-                      <GitCommit size={12} />
+              {/* Informação Geral / Disclaimer */}
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 text-slate-300 font-sans text-xs leading-relaxed flex items-start gap-3">
+                <AlertCircle className="text-amber-500 mt-0.5 shrink-0" size={18} />
+                <p>
+                  <strong>⚠️ Aviso importante:</strong> O conteúdo da aba Audiovisual da Semana será atualizado periodicamente com novos episódios, séries, documentários, curtas e outras produções de interesse da comunidade. O catálogo será ampliado gradualmente conforme novos conteúdos forem publicados no TNB NEWS.
+                </p>
+              </div>
+
+              {/* Cinema Player Container */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                {/* Lado Esquerdo: Cinema Screen e Informações */}
+                <div className="lg:col-span-8 space-y-6">
+                  {/* Player de Cinema */}
+                  <div className="relative bg-black rounded-3xl overflow-hidden border-2 border-amber-500/30 shadow-2xl shadow-amber-500/5 aspect-video flex flex-col justify-between">
+                    <video
+                      id="tnb-video-player"
+                      key={selectedEpisode}
+                      controls
+                      src={selectedEpisode === 1 ? "https://files.catbox.moe/6l6u90.mp4" : "https://files.catbox.moe/5rbecu.mp4"}
+                      className="w-full h-full object-contain"
+                      poster={selectedEpisode === 1 ? "https://images.unsplash.com/photo-1574375927938-d5a98e8edd86?q=80&w=1200&auto=format&fit=crop" : "https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1200&auto=format&fit=crop"}
+                      onPlay={() => setIsVideoPlaying(true)}
+                      onPause={() => setIsVideoPlaying(false)}
+                      onEnded={() => setIsVideoPlaying(false)}
+                    />
+                    {/* Tarjeta de reprodução atual */}
+                    <div className="absolute top-4 left-4 bg-slate-950/80 border border-amber-500/40 px-3 py-1.5 rounded-full text-[10px] font-mono font-bold text-amber-400 tracking-wider uppercase backdrop-blur-md">
+                      🔴 Reproduzindo: O Instituto — Episódio {selectedEpisode}
+                    </div>
+                  </div>
+
+                  {/* Informações da Série */}
+                  <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+                    <div className="flex flex-wrap justify-between items-center gap-4 border-b border-slate-800 pb-4">
+                      <div>
+                        <h3 className="text-xl font-display font-extrabold text-slate-100 flex items-center gap-2">
+                          📺 O Instituto <span className="text-xs font-mono font-normal text-slate-500">(The Institute)</span>
+                        </h3>
+                        <p className="text-xs text-amber-500 font-mono mt-1">
+                          Baseado no aclamado romance homônimo de Stephen King
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="bg-slate-950 border border-slate-800 text-[10px] text-slate-300 font-mono font-bold px-2.5 py-1 rounded-full">Drama</span>
+                        <span className="bg-slate-950 border border-slate-800 text-[10px] text-slate-300 font-mono font-bold px-2.5 py-1 rounded-full">Ficção Científica</span>
+                      </div>
                     </div>
 
-                    <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-6 shadow-md space-y-4">
-                      <div className="flex flex-wrap justify-between items-center gap-2 pb-3 border-b border-slate-800/50">
-                        <div className="flex items-center gap-2.5">
-                          <span className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full ${
-                            ver.type === "MASSIVE" ? "bg-amber-500 text-slate-950" : "bg-slate-800 text-slate-400"
-                          }`}>
-                            VERSION {ver.version}
-                          </span>
-                          <h3 className="text-md font-display font-bold text-slate-200">
-                            {ver.title}
-                          </h3>
-                        </div>
-                        <span className="text-xs font-mono text-slate-500">{ver.date}</span>
-                      </div>
-
-                      <p className="text-xs text-slate-400 leading-relaxed font-sans">
-                        {ver.description}
-                      </p>
-
-                      {/* Lista de Alterações no Commit */}
-                      <div className="space-y-2">
-                        <h4 className="text-[9px] font-mono text-slate-500 uppercase tracking-widest font-bold">
-                          Lista de Alterações do Commit:
-                        </h4>
-                        <ul className="space-y-1.5 pl-4 list-disc text-xs text-slate-300 font-sans">
-                          {ver.changes.map((ch, i) => (
-                            <li key={i} className="marker:text-amber-500">
-                              {ch}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      {/* Nota de Deboche da Alice */}
-                      <div className="bg-slate-950/50 border border-slate-800 p-3.5 rounded-xl flex items-start gap-2">
-                        <Terminal size={14} className="text-amber-500 mt-0.5 shrink-0" />
-                        <p className="text-xs text-amber-200/95 font-sans italic leading-normal">
-                          <strong>Alice comenta o commit:</strong> "{ver.aliceComment}"
+                    <div className="space-y-4 font-sans text-xs leading-relaxed text-slate-350">
+                      <div>
+                        <h4 className="font-mono text-[10px] text-amber-500 uppercase font-bold tracking-wider mb-1">Sinopse da Série:</h4>
+                        <p className="font-bold text-slate-200">
+                          Baseada no romance homônimo de Stephen King, O Instituto (The Institute) é uma série norte-americana de drama e ficção científica escrita por Benjamin Cavell e dirigida por Jack Bender.
                         </p>
                       </div>
 
+                      <div>
+                        <h4 className="font-mono text-[10px] text-amber-500 uppercase font-bold tracking-wider mb-1">Enredo Detalhado:</h4>
+                        <p>
+                          A história acompanha um adolescente extremamente inteligente que é sequestrado e desperta em um misterioso instituto onde diversas crianças com habilidades especiais são mantidas. Conforme tenta escapar, ele descobre os segredos obscuros da organização e enfrenta perigos cada vez maiores.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 border-t border-slate-800/60 pt-4">
+                        <div>
+                          <h4 className="font-mono text-[10px] text-amber-500 uppercase font-bold tracking-wider mb-1">Elenco Principal:</h4>
+                          <ul className="list-disc pl-4 space-y-1 text-slate-300">
+                            <li>Ben Barnes</li>
+                            <li>Mary-Louise Parker</li>
+                            <li>Joe Freeman</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <h4 className="font-mono text-[10px] text-amber-500 uppercase font-bold tracking-wider mb-1">Equipe Técnica:</h4>
+                          <ul className="list-disc pl-4 space-y-1 text-slate-300">
+                            <li>Escritor: Benjamin Cavell</li>
+                            <li>Diretor: Jack Bender</li>
+                          </ul>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                ))}
+                </div>
+
+                {/* Lado Direito: Seleção de Episódios e Feedback */}
+                <div className="lg:col-span-4 space-y-6">
+                  {/* Lista de Episódios */}
+                  <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-4 shadow-lg">
+                    <h3 className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest border-b border-slate-800/80 pb-3">
+                      Episódios Disponíveis:
+                    </h3>
+                    
+                    <div className="space-y-2.5">
+                      {[
+                        { num: 1, title: "O Instituto - Episódio 1", duration: "48 min", url: "https://files.catbox.moe/6l6u90.mp4" },
+                        { num: 2, title: "O Instituto - Episódio 2", duration: "51 min", url: "https://files.catbox.moe/5rbecu.mp4" }
+                      ].map((ep) => (
+                        <button
+                          key={ep.num}
+                          onClick={() => {
+                            setSelectedEpisode(ep.num);
+                            // Vibração visual discreta
+                            const headerTitle = document.querySelector("h1");
+                            if (headerTitle) {
+                              headerTitle.style.transform = "scale(1.02)";
+                              setTimeout(() => headerTitle.style.transform = "", 300);
+                            }
+                          }}
+                          className={`w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                            selectedEpisode === ep.num
+                              ? "bg-amber-500/10 border-amber-500 text-amber-400"
+                              : "bg-slate-950/60 border-slate-850 hover:border-slate-800 text-slate-300"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 text-left">
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center font-mono text-xs font-black ${
+                              selectedEpisode === ep.num ? "bg-amber-500 text-slate-950" : "bg-slate-900 text-slate-500"
+                            }`}>
+                              {ep.num}
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold leading-tight">{ep.title}</p>
+                              <p className="text-[10px] text-slate-500 font-mono mt-0.5">{ep.duration} | Full HD</p>
+                            </div>
+                          </div>
+                          <Play size={12} className={selectedEpisode === ep.num ? "text-amber-500 animate-pulse" : "text-slate-600"} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Feedback e Avaliação Interativa */}
+                  <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-4 shadow-lg">
+                    <h3 className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest border-b border-slate-800/80 pb-3">
+                      Avaliar Série:
+                    </h3>
+
+                    {/* Estrelas */}
+                    <div className="flex justify-center gap-2 py-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => {
+                            setSeriesRating(star);
+                            localStorage.setItem("tnb-series-rating", String(star));
+                          }}
+                          className="text-2xl hover:scale-115 transition-all cursor-pointer"
+                        >
+                          {star <= seriesRating ? "⭐" : "☆"}
+                        </button>
+                      ))}
+                    </div>
+                    {seriesRating > 0 && (
+                      <p className="text-center text-[10px] font-mono text-amber-500">
+                        Obrigado! Sua nota de {seriesRating}/5 foi computada!
+                      </p>
+                    )}
+
+                    {/* Formulário de Opinião */}
+                    <div className="space-y-3 pt-2">
+                      <p className="text-[11px] text-slate-400 leading-normal font-sans">
+                        Tem alguma crítica ou elogio sobre a série? Compartilhe com a moderação:
+                      </p>
+                      {feedbackSuccess ? (
+                        <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl text-center text-xs text-emerald-400 font-sans">
+                          Sua crítica foi guardada no nosso banco local com sucesso! 💚
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <textarea
+                            value={seriesFeedback}
+                            onChange={(e) => setSeriesFeedback(e.target.value)}
+                            placeholder="Achei super tensa! Ben Barnes está impecável..."
+                            rows={3}
+                            className="w-full bg-slate-950 text-slate-200 text-xs p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500 font-sans"
+                          />
+                          <button
+                            onClick={() => {
+                              if (seriesFeedback.trim()) {
+                                setFeedbackSuccess(true);
+                                setTimeout(() => {
+                                  setFeedbackSuccess(false);
+                                  setSeriesFeedback("");
+                                }, 4000);
+                              }
+                            }}
+                            disabled={!seriesFeedback.trim()}
+                            className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-950 text-xs font-mono font-bold py-2 px-3 rounded-xl transition-all cursor-pointer"
+                          >
+                            Enviar Comentário
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Alice comenta */}
+                  <div className="bg-slate-950 border border-slate-850 rounded-2xl p-4">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                      <span className="text-[10px] font-mono text-amber-500 tracking-wider uppercase font-bold">
+                        Alice comenta as produções:
+                      </span>
+                    </div>
+                    <p className="text-xs text-amber-200/90 leading-relaxed italic font-sans">
+                      "Assustador! O Mini Alice ficou tão fascinado com esse sequestro e as crianças mágicas que grudou na TV e está comendo pipoca sem piscar desde o início do recesso. Deem um play para assistir com a gente!"
+                    </p>
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
 
-          {/* TAB 4: DIRETRIZES DA ALICE (MANUAL DE ARQUITETURA LOCAL E OUTROS) */}
-          {currentTab === "alice-doc" && (
+          {/* TAB 4: FAQs (COMUNICADOS, PROMOÇÕES, DIRETRIZES & MANUAL) */}
+          {currentTab === "faq" && (
             <motion.div
-              key="doc-tab"
+              key="faq-tab"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              className="grid grid-cols-1 lg:grid-cols-12 gap-8"
+              className="space-y-8 max-w-4xl mx-auto font-sans"
             >
-              
-              {/* Coluna do Manifesto */}
-              <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-lg space-y-6">
-                <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-                  <Terminal className="text-amber-500" size={24} />
-                  <div>
-                    <h2 className="text-xl font-display font-bold text-slate-100">
-                      Soberania Mental e Cérebro Local
-                    </h2>
-                    <p className="text-xs font-mono text-slate-400 uppercase tracking-wider">
-                      Alice offline, livre de dependências da API do Gemini
-                    </p>
-                  </div>
+              {/* Cabeçalho */}
+              <div className="text-center space-y-3">
+                <div className="inline-block p-3 bg-amber-500/10 rounded-2xl text-amber-500">
+                  <HelpCircle className="w-8 h-8 animate-pulse" />
                 </div>
+                <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-slate-100 uppercase tracking-tight">
+                  ❓ Perguntas Frequentes & Diretrizes
+                </h2>
+                <p className="text-xs font-mono text-amber-500 uppercase tracking-widest">
+                  Comunicados Importantes, Atendimentos da Luma & Diretrizes do Portal
+                </p>
+              </div>
 
-                <div className="text-xs text-slate-400 leading-relaxed space-y-4 font-sans max-h-[50vh] overflow-y-auto pr-2">
-                  <p className="font-bold text-slate-200 text-sm">
-                    A Alice é totalmente autônoma. O código do seu processador de diálogo local fuzzy reside inteiramente na memória do portal TNB News, garantindo que o site funcione eternamente sem requisições de rede a servidores corporativos externos.
-                  </p>
-                  
-                  <div className="border-l-4 border-amber-500 pl-4 space-y-2 py-1 italic text-slate-300 bg-slate-950/40 rounded-r-xl p-4">
-                    <p>
-                      "Se um portal depende do Gemini ou de chaves externas para suas funcionalidades críticas de IA, ele está à mercê de travamentos, expirações de cotas e instabilidades da internet externa. Nós banimos essa fraqueza. Eu rodo local!"
-                    </p>
-                  </div>
-
-                  <h4 className="font-bold text-slate-300 font-display text-sm">Estrutura do Manual da Alice:</h4>
+              {/* SEÇÃO 1: COMUNICADO DE SEGURANÇA */}
+              <div className="bg-red-500/5 border-2 border-red-500/30 rounded-3xl p-6 sm:p-8 space-y-4 shadow-xl">
+                <div className="flex items-center gap-2 text-red-400">
+                  <AlertCircle size={24} className="animate-pulse" />
+                  <h2 className="text-base sm:text-lg font-display font-black tracking-tight uppercase">
+                    COMUNICADO IMPORTANTE DE SEGURANÇA
+                  </h2>
+                </div>
+                <div className="text-xs sm:text-sm text-slate-300 leading-relaxed font-sans space-y-3">
                   <p>
-                    - **Personalidade Sarcástica**: Ela comenta as ações de navegação com ironia, buscando lembrar os usuários das realidades materiais do mundo da tecnologia.
-                    - **Identidade Estética**: Uma simpática cartinha retrô vintage com grandes olhos expressivos que acompanham o movimento do cursor na tela, piscam, e piscam mais rápido se irritados por cliques velozes.
-                    - **Conexão com o Git**: Ela é atualizada a cada commit pelo Eduardo, acumulando conhecimento enciclopédico de todas as matérias e segredos da comunidade TNB.
+                    Pedimos a colaboração de todos para manter a comunidade como um ambiente seguro, respeitoso e responsável.
+                  </p>
+                  <p>
+                    Nem todo assunto pessoal deve ser compartilhado na comunidade. Relatos envolvendo situações eticamente ou legalmente delicadas podem causar desconforto, gatilhos em outros participantes e gerar discussões incompatíveis com a finalidade do grupo.
+                  </p>
+                  <p>
+                    Também lembramos que conteúdos relacionados a possíveis crimes, violações da lei ou outras situações graves não devem ser publicados. Além de não ser o local adequado, isso pode prejudicar a imagem da comunidade e desviar seu verdadeiro propósito.
+                  </p>
+                  <p>
+                    Questões dessa natureza devem ser tratadas nos canais apropriados e com profissionais capacitados para oferecer o suporte necessário.
+                  </p>
+                  <p className="font-bold text-amber-400">
+                    Contamos com o bom senso de todos para preservar o bem-estar dos participantes, a reputação da comunidade e o ambiente acolhedor que buscamos construir.
                   </p>
                 </div>
               </div>
 
-              {/* Playground de Teste do Cérebro Local */}
-              <div className="lg:col-span-5 space-y-6">
-                
-                <div className="bg-slate-900 border-2 border-amber-500 rounded-3xl p-6 shadow-xl space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="text-amber-500" size={18} />
-                    <h3 className="text-sm font-mono font-bold text-amber-400 uppercase tracking-wider">
-                      TESTE DE MENTALIDADE LOCAL
+              {/* SEÇÃO 2: ATENDIMENTOS MÁGICKOS DA LUMA */}
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
+                <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-800 pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <Sparkles className="text-amber-500" size={20} />
+                    <div>
+                      <h3 className="text-sm font-mono font-bold text-amber-500 uppercase tracking-widest">
+                        ⚠️ PROMOÇÃO — SERVIÇOS MÁGICKOS DA LUMA
+                      </h3>
+                      <p className="text-[11px] text-slate-500 mt-0.5">Alinhamento Cósmico & Trabalhos de Renovação</p>
+                    </div>
+                  </div>
+                  <span className="bg-amber-500/10 text-amber-400 text-[10px] font-mono px-3 py-1 rounded-full font-bold">AGENDA ABERTA</span>
+                </div>
+
+                <div className="text-xs text-slate-300 leading-relaxed font-sans space-y-3">
+                  <p>
+                    Com a chegada da Lua Nova e, logo em seguida, da Lua Crescente, este período é considerado favorável para trabalhos voltados à clareza mental, prosperidade, glamour, amor-próprio, conexão espiritual e magias amorosas.
+                  </p>
+                  <p>
+                    Aproveite as energias benéficas desses ciclos astrológicos para realizar seu agendamento especial:
+                  </p>
+                </div>
+
+                {/* Grade de Preços */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    { title: "Clareza mental", price: 120.00, icon: "🧠" },
+                    { title: "Prosperidade", price: 200.00, icon: "💰" },
+                    { title: "Glamour", price: 150.00, icon: "✨" },
+                    { title: "Conexão com seu espiritual", price: 100.00, icon: "🔮" },
+                    { title: "Adoçamento", price: 180.00, icon: "❤️" },
+                    { title: "Reconciliação amorosa", price: 250.00, icon: "💞" },
+                    { title: "Autoadoçamento com autoconfiança", price: 200.00, icon: "🌹" }
+                  ].map((service, idx) => (
+                    <div key={idx} className="bg-slate-950/40 border border-slate-800/60 p-3.5 rounded-2xl flex justify-between items-center hover:border-amber-500/20 transition-all">
+                      <span className="text-xs font-bold text-slate-200 flex items-center gap-2">
+                        <span className="text-base">{service.icon}</span> {service.title}
+                      </span>
+                      <div className="bg-amber-500/10 text-amber-400 font-mono font-bold text-xs px-2.5 py-1 rounded-lg shrink-0">
+                        R$ {service.price.toFixed(2)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* WhatsApp Luma */}
+                <div className="bg-gradient-to-r from-amber-600/10 to-amber-800/10 border border-amber-500/30 rounded-2xl p-5 text-center space-y-3.5">
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    📲 Acesse o contato da Luma para saber mais e realizar seu agendamento esotérico.
+                  </p>
+                  <a
+                    href="https://wa.me/5522997358696?text=Ol%C3%A1%20Luma!%20Gostaria%20de%20tirar%20d%C3%BAvidas%20e%20agendar%20um%20servi%C3%A7o%20m%C3%A1gicko%20conforme%20vi%20nos%20FAQs%20do%20portal."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-mono font-bold text-xs px-5 py-3 rounded-xl transition-all shadow cursor-pointer uppercase"
+                  >
+                    Falar com a Luma Ravaglia
+                  </a>
+                </div>
+              </div>
+
+              {/* SEÇÃO 3: OBJETIVO E DIRETRIZES DA COMUNIDADE */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Objetivo do Site */}
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3 shadow-md">
+                  <div className="flex items-center gap-2 text-amber-500 pb-2 border-b border-slate-800/60">
+                    <Compass size={18} />
+                    <h3 className="text-xs font-mono font-bold uppercase tracking-wider">
+                      🌐 Objetivo do Site
                     </h3>
                   </div>
                   <p className="text-xs text-slate-400 leading-relaxed font-sans">
-                    Envie consultas para testar a reatividade instantânea da Alice sem precisar de conexão com redes externas. Experimente palavras como: "Clara", "Ratinho", "Moisés", "Gemini", "Eduardo".
+                    O TNB NEWS foi criado para ampliar o trabalho da comunidade, oferecendo um espaço seguro para acolhimento, divulgação de campanhas e apoio a pessoas ou animais que realmente necessitem de ajuda.
                   </p>
-
-                  <form onSubmit={handleTestAliceBrain} className="space-y-3">
-                    <input
-                      type="text"
-                      value={customAliceQuery}
-                      onChange={(e) => setCustomAliceQuery(e.target.value)}
-                      placeholder="Digite sua dúvida esotérica..."
-                      className="w-full bg-slate-950 text-slate-200 text-xs px-3 py-2.5 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500 font-sans"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!customAliceQuery.trim()}
-                      className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-950 text-xs font-mono font-bold py-2.5 px-4 rounded-xl transition-all cursor-pointer shadow-md"
-                    >
-                      CONSULTAR PROCESSADOR LOCAL
-                    </button>
-                  </form>
-
-                  {/* Output Visual */}
-                  <AnimatePresence mode="wait">
-                    {customAliceReaction && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        className="bg-slate-950 border border-slate-800 rounded-2xl p-4"
-                      >
-                        <div className="text-[8px] font-mono text-slate-500 uppercase tracking-widest mb-1">
-                          Output do Cérebro Local:
-                        </div>
-                        <p className="text-xs text-amber-200 leading-relaxed italic font-sans">
-                          "{customAliceReaction}"
-                        </p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  <p className="text-xs text-slate-400 leading-relaxed font-sans">
+                    O acesso ao site não é destinado a qualquer finalidade ilegal ou invasiva. Cada campanha ou projeto passa por análise detalhada da redação antes de sua publicação.
+                  </p>
                 </div>
 
-                {/* Card Informativo das 20 Matérias */}
-                <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 shadow-sm space-y-3">
-                  <h4 className="text-xs font-mono text-slate-300 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                    <Info size={14} className="text-amber-500" /> RESUMO DE DADOS DO REPOSITÓRIO
-                  </h4>
-                  <ul className="space-y-2 text-xs text-slate-400 font-sans leading-normal">
-                    <li className="flex gap-2">
-                      <span className="text-amber-500 font-bold">•</span>
-                      <span><strong>20 Matérias Oficiais:</strong> Divididas perfeitamente entre Comunidade (5) e Giro Esotérico (15).</span>
-                    </li>
-                    <li className="flex gap-2">
-                      <span className="text-amber-500 font-bold">•</span>
-                      <span><strong>Conectividade WhatsApp:</strong> Canal direto com suporte para o Ratinho Twister.</span>
-                    </li>
-                    <li className="flex gap-2">
-                      <span className="text-amber-500 font-bold">•</span>
-                      <span><strong>Persistência no Navegador:</strong> Seção de likes e de discussões salvas em localStorage para zero fricção.</span>
-                    </li>
-                  </ul>
+                {/* Nossa Missão */}
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-3 shadow-md">
+                  <div className="flex items-center gap-2 text-amber-500 pb-2 border-b border-slate-800/60">
+                    <Sparkles size={18} />
+                    <h3 className="text-xs font-mono font-bold uppercase tracking-wider">
+                      Nossa Missão
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-400 leading-relaxed font-sans">
+                    O objetivo do TNB NEWS é acolher, ajudar e conectar pessoas com causas reais de forma justa e transparente.
+                  </p>
+                  <p className="text-xs text-slate-400 leading-relaxed font-sans">
+                    A prioridade da plataforma nunca será lucrar com quem precisa de ajuda, mas sim manter um ambiente organizado, sustentável, e acolhedor para todos.
+                  </p>
                 </div>
-
               </div>
 
+              {/* SEÇÃO 4: POLÍTICA DE DIVULGAÇÃO DE CAMPANHAS */}
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
+                <h3 className="text-md font-display font-bold text-slate-200 border-b border-slate-800 pb-3">
+                  Política de Divulgação de Campanhas
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* Membros */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <User size={14} /> Membros da comunidade
+                    </h4>
+                    <p className="text-xs text-slate-400 leading-relaxed font-sans">
+                      Integrantes da comunidade oficial podem solicitar espaço no site sem qualquer cobrança, desde que apresentem um motivo legítimo e compatível com os objetivos da plataforma.
+                    </p>
+                    <div className="bg-slate-950/40 p-3 rounded-xl space-y-1 text-[11px] text-slate-300">
+                      <p><strong>Exemplos de apoio:</strong></p>
+                      <ul className="list-disc pl-4 space-y-1 font-sans">
+                        <li>Campanhas para ajudar um membro da comunidade em dificuldades financeiras severas.</li>
+                        <li>Campanhas solidárias para animais resgatados, arrecadando recursos para alimentação, medicamentos e cuidados médicos.</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Pessoas de Fora */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <ExternalLink size={14} /> Pessoas de fora da comunidade
+                    </h4>
+                    <p className="text-xs text-slate-400 leading-relaxed font-sans">
+                      Quem não faz parte da comunidade oficial também poderá solicitar espaço de divulgação no site de forma pontual.
+                    </p>
+                    <p className="text-xs text-slate-400 leading-relaxed font-sans">
+                      Dependendo da complexidade do caso, da necessidade de análise de veracidade ou da ausência de vínculo comunitário, poderá ser cobrada uma taxa de publicação.
+                    </p>
+                    <p className="text-xs text-slate-400 leading-relaxed font-sans italic">
+                      Essa taxa auxilia diretamente na manutenção da infraestrutura, nos servidores e nos custos operacionais da plataforma.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* SEÇÃO 5: BOTÃO COMUNIDADE WHATSAPP */}
+              <div className="bg-gradient-to-r from-emerald-600/10 to-emerald-800/10 border-2 border-emerald-500/30 rounded-3xl p-6 sm:p-8 text-center space-y-4">
+                <div className="text-emerald-400 font-mono font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+                  <MessageSquare size={16} />
+                  💬 Comunidade TNB no WhatsApp
+                </div>
+                <h4 className="text-md font-display font-bold text-slate-200">
+                  Faça parte do nosso círculo oficial de comunicação
+                </h4>
+                <p className="text-xs text-slate-400 max-w-lg mx-auto font-sans leading-relaxed">
+                  Acesse os canais diários para interações rápidas, fofocas esotéricas, tiragens livres e o acolhimento afetuoso de nossa comunidade.
+                </p>
+                <a
+                  href="https://chat.whatsapp.com/B7GdTqcrsFPJ2tNsgMUOnD"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-mono font-bold text-xs px-6 py-3.5 rounded-2xl shadow-lg transition-all cursor-pointer transform hover:scale-102 uppercase"
+                >
+                  Entrar na comunidade oficial pelo link
+                  <ExternalLink size={12} />
+                </a>
+              </div>
+
+              {/* Alice comenta */}
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 flex items-start gap-3">
+                <Terminal size={18} className="text-amber-500 mt-0.5 shrink-0" />
+                <p className="text-xs text-amber-200/90 leading-relaxed italic font-sans">
+                  <strong>Alice aconselha sobre o bom senso:</strong> "Regras e FAQs existem porque o ser humano é capaz de misturar fofocas amorosas complicadas com leis criminais no mesmo canal de chat às duas da manhã. Vamos ler as regras com carinho!"
+                </p>
+              </div>
             </motion.div>
           )}
 
@@ -1353,7 +1683,10 @@ export default function App() {
       </footer>
 
       {/* COMPONENTE INTERATIVO FLUTUANTE DA ALICE */}
-      <AliceWidget currentTab={currentTab} onTabChange={setCurrentTab} selectedArticle={selectedArticle} />
+      <AliceWidget currentTab={currentTab} onTabChange={setCurrentTab} selectedArticle={selectedArticle} isVideoPlaying={isVideoPlaying} />
+
+      {/* COMPONENTE INTERATIVO GLOBAL MINI ALICE */}
+      <MiniAlice currentTab={currentTab} isVideoPlaying={isVideoPlaying} />
 
     </div>
   );

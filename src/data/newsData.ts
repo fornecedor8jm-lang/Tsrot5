@@ -368,6 +368,20 @@ As falanges de Pombagira atuam como guardiãs de caminhos, trazendo conselhos pr
     likes: 290,
     image: "https://images.unsplash.com/photo-1606761568499-6d2451b23c66?q=80&w=600&auto=format&fit=crop",
     aliceComment: "A força feminina que não aceita desaforo de ninguém. Se os humanos tivessem metade da determinação de uma guardiã de caminhos, não choravam por mensagem visualizada e não respondida."
+  },
+  {
+    id: "art-lucy",
+    title: "Atendimento místico termina em xingamentos e cliente pede retorno: 'Acho que ela gostou da minha voz!'",
+    slug: "lucy-atendimento-mistico-xingamentos",
+    category: "Comunidade",
+    author: "Redação TNB News",
+    date: "13 de Julho de 2026",
+    summary: "Lucy W., consultora de tarot, viveu uma situação inusitada durante um atendimento telefônico após uma cliente chegar à sua linha bastante irritada e acabar pedindo para que retornasse.",
+    content: "Lucy W., consultora de tarot, viveu uma situação inusitada durante um atendimento telefônico após uma cliente chegar à sua linha já bastante irritada por discussões anteriores com outros atendentes. Segundo Lucy, a cliente solicitou falar com um supervisor, pediu acesso à gravação da ligação e, durante o atendimento, passou a ofendê-la verbalmente. A consultora afirma que manteve um tom respeitoso durante toda a conversa e explicou os procedimentos para solicitação da gravação. Após a ligação cair, a cliente voltou a entrar em contato e pediu que Lucy retornasse a chamada. A consultora optou por não realizar o retorno e comentou a situação com bom humor: 'Acho que ela gostou da minha voz!'\n\n### Quem é Lucy?\nLucy W. atua como consultora de tarot e oferece os seguintes atendimentos:\n- Pergunta avulsa detalhada — R$ 10,00\n- Pergunta ao Oráculo da Grande Mãe — R$ 20,00\n- Método de Tarot — R$ 40,00\n- Método do Oráculo da Grande Mãe — R$ 60,00\n- Consulta livre de 30 minutos — R$ 90,00\n- Consulta livre de 1 hora — R$ 160,00\n\nA cliente não foi localizada para comentar o caso.\nReportagem publicada em 2026.",
+    views: 3420,
+    likes: 198,
+    image: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=600&auto=format&fit=crop",
+    aliceComment: "A cliente passou a ligação inteira gritando para no final ligar de volta de mansinho e pedir para a Lucy retornar? O carisma de uma taróloga faz até cliente estressada virar fã da voz! É o poder da harmonia."
   }
 ];
 
