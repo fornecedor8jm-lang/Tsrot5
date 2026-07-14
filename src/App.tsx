@@ -90,23 +90,26 @@ export default function App() {
     localStorage.setItem("tnb-likes-v2", JSON.stringify(localArticles));
   }, [localArticles]);
 
-  // Seção de Comentários Funcionais (localStorage)
+  // Seção de Comentários Funcionais (localStorage) - Usamos v3 para limpar dados simulados anteriores
   const [commentsList, setCommentsList] = useState<Record<string, Array<{ author: string; text: string; date: string }>>>({});
   const [commentName, setCommentName] = useState("");
   const [commentText, setCommentText] = useState("");
 
-  // Estados para Aba Audiovisual
+  // Estados para Aba Audiovisual e Discussão sobre a Série
   const [selectedEpisode, setSelectedEpisode] = useState<number>(1);
   const [isVideoPlaying, setIsVideoPlaying] = useState<boolean>(false);
   const [seriesRating, setSeriesRating] = useState<number>(() => {
     return Number(localStorage.getItem("tnb-series-rating") || "0");
   });
-  const [seriesFeedback, setSeriesFeedback] = useState<string>("");
-  const [feedbackSuccess, setFeedbackSuccess] = useState<boolean>(false);
 
-  // Carregar comentários
+  // Discussão sobre a Série (localStorage)
+  const [seriesCommentsList, setSeriesCommentsList] = useState<Record<string, Array<{ author: string; text: string; date: string }>>>({});
+  const [seriesCommentName, setSeriesCommentName] = useState("");
+  const [seriesCommentText, setSeriesCommentText] = useState("");
+
+  // Carregar comentários reais de artigos (sem dados fictícios)
   useEffect(() => {
-    const savedComments = localStorage.getItem("tnb-comments-v2");
+    const savedComments = localStorage.getItem("tnb-comments-v3");
     if (savedComments) {
       try {
         setCommentsList(JSON.parse(savedComments));
@@ -114,26 +117,66 @@ export default function App() {
         console.error(e);
       }
     } else {
-      // Comentários iniciais amigáveis de exemplo para enriquecer
-      const initial: Record<string, Array<{ author: string; text: string; date: string }>> = {
-        "art-1": [
-          { author: "Eduardo", text: "Clara jurou que o nove de copas indicava gol no segundo tempo. Quase quebrei meu teclado rindo nos grupos de chat!", date: "12 de Julho de 2026 às 14:10" },
-          { author: "Viih", text: "O Tarot do Bolso é incrível justamente por essas bizarrices que inventamos. Muito bom o artigo!", date: "12 de Julho de 2026 às 15:30" }
-        ],
-        "art-3": [
-          { author: "Mãe Conselheira", text: "Eduardo, você é um orgulho para a comunidade Tarot no Bolso. Que história maravilhosa de superação e foco técnico!", date: "11 de Julho de 2026 às 09:12" }
-        ],
-        "art-4": [
-          { author: "Clara", text: "Viih, suas orações funcionaram de verdade. As cartas nunca mentem, só precisamos aprender a ouvir os ciclos cósmicos amorosos.", date: "10 de Julho de 2026 às 18:40" }
-        ],
-        "art-5": [
-          { author: "Moisés", text: "Eu só estava sem internet, pessoal! Mas adorei a teoria do Pão de Queijo Voador, risadas garantidas.", date: "09 de Julho de 2026 às 21:05" }
-        ]
-      };
-      setCommentsList(initial);
-      localStorage.setItem("tnb-comments-v2", JSON.stringify(initial));
+      setCommentsList({});
+      localStorage.setItem("tnb-comments-v3", JSON.stringify({}));
     }
   }, []);
+
+  // Carregar comentários reais da série (sem dados fictícios)
+  useEffect(() => {
+    const savedSeriesComments = localStorage.getItem("tnb-series-comments-v1");
+    if (savedSeriesComments) {
+      try {
+        setSeriesCommentsList(JSON.parse(savedSeriesComments));
+      } catch (e) {
+        console.error(e);
+      }
+    } else {
+      setSeriesCommentsList({});
+      localStorage.setItem("tnb-series-comments-v1", JSON.stringify({}));
+    }
+  }, []);
+
+  // Função para tratar as menções (@username) nos comentários
+  const renderCommentText = (text: string) => {
+    const parts = text.split(/(\s+)/);
+    return parts.map((part, index) => {
+      if (part.startsWith("@") && part.length > 1) {
+        return (
+          <span key={index} className="text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] font-mono">
+            {part}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
+  // Função para adicionar menção automaticamente ao responder
+  const handleReplyMention = (author: string, isSeries: boolean) => {
+    const formattedAuthor = author.replace(/\s+/g, "").toLowerCase();
+    const mention = `@${formattedAuthor} `;
+    
+    if (isSeries) {
+      setSeriesCommentText(prev => {
+        if (prev.includes(mention)) return prev;
+        return prev ? `${prev} ${mention}` : mention;
+      });
+      setTimeout(() => {
+        const inputEl = document.getElementById("series-comment-text-input");
+        if (inputEl) inputEl.focus();
+      }, 50);
+    } else {
+      setCommentText(prev => {
+        if (prev.includes(mention)) return prev;
+        return prev ? `${prev} ${mention}` : mention;
+      });
+      setTimeout(() => {
+        const inputEl = document.getElementById("article-comment-text-input");
+        if (inputEl) inputEl.focus();
+      }, 50);
+    }
+  };
 
   const handleAddComment = (articleId: string, e: React.FormEvent) => {
     e.preventDefault();
@@ -155,8 +198,32 @@ export default function App() {
     };
 
     setCommentsList(updated);
-    localStorage.setItem("tnb-comments-v2", JSON.stringify(updated));
+    localStorage.setItem("tnb-comments-v3", JSON.stringify(updated));
     setCommentText("");
+  };
+
+  const handleAddSeriesComment = (episodeId: string, e: React.FormEvent) => {
+    e.preventDefault();
+    if (!seriesCommentName.trim() || !seriesCommentText.trim()) return;
+
+    const newComment = {
+      author: seriesCommentName.trim(),
+      text: seriesCommentText.trim(),
+      date: new Date().toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric"
+      }) + " às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+    };
+
+    const updated = {
+      ...seriesCommentsList,
+      [episodeId]: [...(seriesCommentsList[episodeId] || []), newComment]
+    };
+
+    setSeriesCommentsList(updated);
+    localStorage.setItem("tnb-series-comments-v1", JSON.stringify(updated));
+    setSeriesCommentText("");
   };
 
   // Persistir o tema escolhido
@@ -1373,41 +1440,75 @@ export default function App() {
                       </p>
                     )}
 
-                    {/* Formulário de Opinião */}
-                    <div className="space-y-3 pt-2">
-                      <p className="text-[11px] text-slate-400 leading-normal font-sans">
-                        Tem alguma crítica ou elogio sobre a série? Compartilhe com a moderação:
-                      </p>
-                      {feedbackSuccess ? (
-                        <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl text-center text-xs text-emerald-400 font-sans">
-                          Sua crítica foi guardada no nosso banco local com sucesso! 💚
+                    {/* ÁREA DE COMENTÁRIOS PERSISTENTES DA SÉRIE (LOCALSTORAGE) */}
+                    <div className="pt-4 border-t border-slate-800/60 space-y-4">
+                      <div className="flex items-center gap-2 text-slate-200 font-display font-bold text-sm">
+                        <MessageSquare size={16} className="text-amber-500" />
+                        <span>Discussão sobre a Série ({(seriesCommentsList[`ep-${selectedEpisode}`] || []).length})</span>
+                      </div>
+
+                      {/* Lista de Comentários */}
+                      <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
+                        {seriesCommentsList[`ep-${selectedEpisode}`] && seriesCommentsList[`ep-${selectedEpisode}`].length > 0 ? (
+                          seriesCommentsList[`ep-${selectedEpisode}`].map((comm, i) => (
+                            <div key={i} className="bg-slate-950/60 border border-slate-800/80 p-3 rounded-xl space-y-1">
+                              <div className="flex justify-between items-center text-[10px] font-mono">
+                                <span className="text-amber-500 font-bold flex items-center gap-1">
+                                  <User size={10} /> {comm.author}
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-slate-500">{comm.date}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleReplyMention(comm.author, true)}
+                                    className="text-amber-500 hover:text-amber-400 font-bold cursor-pointer transition-colors"
+                                  >
+                                    Responder
+                                  </button>
+                                </div>
+                              </div>
+                              <p className="text-xs text-slate-300 font-sans leading-relaxed break-words">
+                                {renderCommentText(comm.text)}
+                              </p>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-xs text-slate-500 italic text-center py-2 leading-relaxed">
+                            Ainda não há comentários. Seja o primeiro a participar desta discussão!
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Form de Envio */}
+                      <form onSubmit={(e) => handleAddSeriesComment(`ep-${selectedEpisode}`, e)} className="space-y-2 pt-2">
+                        <div className="grid grid-cols-1 gap-2">
+                          <input
+                            type="text"
+                            value={seriesCommentName}
+                            onChange={(e) => setSeriesCommentName(e.target.value)}
+                            placeholder="Seu nome..."
+                            required
+                            className="bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500 font-mono"
+                          />
                         </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <textarea
-                            value={seriesFeedback}
-                            onChange={(e) => setSeriesFeedback(e.target.value)}
-                            placeholder="Achei super tensa! Ben Barnes está impecável..."
-                            rows={3}
-                            className="w-full bg-slate-950 text-slate-200 text-xs p-3 rounded-xl border border-slate-800 focus:outline-none focus:border-amber-500 font-sans"
+                        <div className="flex gap-2">
+                          <input
+                            id="series-comment-text-input"
+                            type="text"
+                            value={seriesCommentText}
+                            onChange={(e) => setSeriesCommentText(e.target.value)}
+                            placeholder="O que você acha do episódio?..."
+                            required
+                            className="flex-1 bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-100 focus:outline-none focus:border-amber-500"
                           />
                           <button
-                            onClick={() => {
-                              if (seriesFeedback.trim()) {
-                                setFeedbackSuccess(true);
-                                setTimeout(() => {
-                                  setFeedbackSuccess(false);
-                                  setSeriesFeedback("");
-                                }, 4000);
-                              }
-                            }}
-                            disabled={!seriesFeedback.trim()}
-                            className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-950 text-xs font-mono font-bold py-2 px-3 rounded-xl transition-all cursor-pointer"
+                            type="submit"
+                            className="bg-amber-500 hover:bg-amber-600 text-slate-950 px-3 py-2 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1"
                           >
-                            Enviar Comentário
+                            <Send size={12} />
                           </button>
                         </div>
-                      )}
+                      </form>
                     </div>
                   </div>
 
@@ -1762,16 +1863,25 @@ export default function App() {
                             <span className="text-amber-500 font-bold flex items-center gap-1">
                               <User size={10} /> {comm.author}
                             </span>
-                            <span className="text-slate-500">{comm.date}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-slate-500">{comm.date}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleReplyMention(comm.author, false)}
+                                className="text-amber-500 hover:text-amber-400 font-bold cursor-pointer transition-colors"
+                              >
+                                Responder
+                              </button>
+                            </div>
                           </div>
-                          <p className="text-xs text-slate-300 font-sans leading-relaxed">
-                            {comm.text}
+                          <p className="text-xs text-slate-300 font-sans leading-relaxed break-words">
+                            {renderCommentText(comm.text)}
                           </p>
                         </div>
                       ))
                     ) : (
                       <p className="text-xs text-slate-500 italic text-center py-2">
-                        Nenhum comentário ainda. Seja o primeiro a palpitar sobre este mistério!
+                        Ainda não há comentários. Seja o primeiro a participar desta discussão!
                       </p>
                     )}
                   </div>
@@ -1790,6 +1900,7 @@ export default function App() {
                     </div>
                     <div className="flex gap-2">
                       <input
+                        id="article-comment-text-input"
                         type="text"
                         value={commentText}
                         onChange={(e) => setCommentText(e.target.value)}
