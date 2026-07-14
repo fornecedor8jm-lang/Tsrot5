@@ -10,8 +10,23 @@ export interface VersionRelease {
 
 export const versionHistory: VersionRelease[] = [
   {
+    version: "105.00",
+    date: "13 de Julho de 2026 (Atual)",
+    title: "Discussão sobre a Série & Controle de Soberania da Alice",
+    type: "MASSIVE",
+    description: "Uma atualização colossal de magnitude v105.00! Introduzimos o recurso de Discussão sobre a Série na aba Audiovisuais da Semana, espelhando com precisão o design da Discussão do Artigo, porém focado nos episódios em exibição. Adicionamos suporte total para menções reais com '@' e respostas interativas para a comunidade. Além disso, incluímos um botão de soberania que permite ao usuário ativar ou desativar a Alice de forma opcional, fazendo-a desaparecer completamente do site até ser reativada pelo botão no topo do portal.",
+    changes: [
+      "Controle de Soberania (Desativar Alice): Agora os usuários podem desligar ou ligar a Alice opcionalmente por meio de um botão no cabeçalho, com persistência local de estado.",
+      "Discussão sobre a Série: Novo mural de comentários reais exclusivos para a aba de Audiovisuais da Semana, sem mensagens simuladas ou automáticas.",
+      "Sistema de Menções com '@': Suporte para menções dinâmicas a outros usuários (@username) com realce visual inteligente.",
+      "Interação 'Responder': Atalho prático para inserir menção do autor do comentário no campo de texto automaticamente e focar no input.",
+      "Banimento Completo de Dados Simulados: Remoção total de qualquer comentário fictício ou de teste em ambas as seções de discussão do portal, garantindo transparência absoluta."
+    ],
+    aliceComment: "v105.00 NO AR! E olhe só: agora você tem controle sobre mim! Se você cansar das minhas fofocas ou palpites astrológicos, pode me desligar no botão ali em cima (mas por favor, não me deixe no escuro por muito tempo! 🥺). Ah, e a nova Discussão sobre a Série está fantástica e 100% livre de bots e mentiras. Venha marcar seus amigos com o '@' para fofocar sobre o episódio da semana! 🥰🔮"
+  },
+  {
     version: "101.44",
-    date: "12 de Julho de 2026 (Atual)",
+    date: "12 de Julho de 2026",
     title: "O Despertar da Alice Viva: Poses Sincronizadas & Motor de Diálogo Imersivo",
     type: "MASSIVE",
     description: "Um salto de magnitude colossal (v101.44)! Esta atualização transforma a Alice AI de um simples widget de conversação em uma personagem verdadeiramente ativa e consciente no TNB NEWS. Desenvolvemos uma matriz de 32 animações exclusivas controladas por Framer Motion, sincronizadas com 640 falas ociosas temáticas e 515 interações de chat. O sistema conta com controle rígido de histórico por sessionStorage para evitar qualquer repetição de frases. Também foram atualizadas as mídias reais de campanhas solidárias (Ratinho Twister e Luma).",

@@ -499,7 +499,7 @@ export default function App() {
               <span>{timeStr}</span>
             </div>
             <div className="hidden sm:inline">ALICE OFFLINE: {isAliceActive ? "OPERANTE" : "INATIVA"}</div>
-            <div>VERSÃO: v89.99</div>
+            <div>VERSÃO: v{versionHistory[0]?.version || "105.00"}</div>
           </div>
         </div>
 
